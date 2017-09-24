@@ -1,0 +1,191 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset=utf-8>
+    
+        <title>Reids 有序集合的实现原理 | Reids 有序集合的实现原理</title>
+        <link rel="stylesheet" href="/static/style.css" type="text/css">
+        <link href="/feed.atom" rel="alternate" title=" Reids 有序集合的实现原理" type="application/atom+xml">
+            <link rel="stylesheet" href="/static/_pygments.css"
+                  type="text/css">
+    
+    <script>
+        var _hmt = _hmt || [];
+        (function() {
+            var hm = document.createElement("script");
+            hm.src = "https://hm.baidu.com/hm.js?7972bc564f84e320d4f261fe1ada61da";
+            var s = document.getElementsByTagName("script")[0];
+            s.parentNode.insertBefore(hm, s);
+        })();
+</script>
+
+</head>
+<body>
+<div class=container>
+    <div class=navbar>
+        
+    </div>
+    <div class=body>
+        
+        <h1 class="title">Reids 有序集合的实现原理</h1>
+
+    <p>Redis有序集合的底层实现有两种方式：</p>
+<ul>
+<li>压缩列表</li>
+<li>跳跃表。</li>
+</ul>
+<p>如果一个有序集合包含的元素较多，或者有序集合的元素成员是比较长的字符串时，Redis就会使用跳跃表来作为有序集合的底层实现。今天，我们就来看下有序集合健的跳跃表实现。</p>
+<h3>跳跃表</h3>
+<p>跳跃表（<a href="http://en.wikipedia.org/wiki/Skip_list">skiplist</a>）是一种随机化的数据， 由 William Pugh 在论文<a href="http://www.cl.cam.ac.uk/teaching/0506/Algorithms/skiplists.pdf">《Skip lists: a probabilistic alternative to balanced trees》</a>中提出， 跳跃表以有序的方式在层次化的链表中保存元素， 效率和平衡树媲美 —— 查找、删除、添加等操作都可以在对数期望时间下完成， 并且比起平衡树来说， 跳跃表的实现要简单直观得多。</p>
+<p><img alt="skip-list" src="/../img/skip-list.png"></p>
+<p>图片来自维基百科</p>
+<p>跳跃表主要由以下部分构成：</p>
+<ul>
+<li>表头（head）：负责维护跳跃表的节点指针。</li>
+<li>跳跃表节点：保存着元素值，以及多个层。</li>
+<li>层：保存着指向其他元素的指针。高层的指针越过的元素数量大于等于低层的指针，为了提高查找的效率，程序总是从高层先开始访问，然后随着元素值范围的缩小，慢慢降低层次。</li>
+<li>表尾：全部由 <code>NULL</code> 组成，表示跳跃表的末尾。</li>
+</ul>
+<p>关于，跳跃表具体的创建、删除、插入以及范围型操作，可以参考<a href="https://book.douban.com/subject/4065258/">算法：C语言实现</a></p>
+<h3>Redis跳跃表结构</h3>
+<p>Redis的跳跃表由<code>server.h/zskiplistNode</code>和<code>server.h/zskiplist</code>两个结构定义，其中<code>zskiplistNode</code>结构用于定义跳跃表节点，zskiplist结构用于保存跳跃表相关信息，比如节点数量、表头节点、表尾节点等。</p>
+<ol>
+<li>
+<p>zskiplist结构</p>
+</li>
+<li>
+<p>header：跳跃表的表头节点</p>
+</li>
+<li>tail：跳跃表的表尾节点</li>
+<li>level：跳跃表层数最大的节点的层数</li>
+<li>
+<p>length：跳跃表长度</p>
+</li>
+<li>
+<p>zskiplistNode</p>
+</li>
+<li>
+<p>level：节点层数组，每个层包括前进指针和跨度两个属性</p>
+</li>
+<li>
+<p>backward：节点后退指针，在反向遍历时使用</p>
+</li>
+<li>
+<p>score：节点保存的分值，跳跃表中节点按节点分值从小到大排列</p>
+</li>
+<li>
+<p>obj：节点成员对象。</p>
+</li>
+</ol>
+<div class="codehilite"><pre><span></span><span class="cm">/* part of server.h */</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">zskiplistNode</span> <span class="p">{</span>
+    <span class="n">sds</span> <span class="n">ele</span><span class="p">;</span>
+    <span class="kt">double</span> <span class="n">score</span><span class="p">;</span>
+    <span class="k">struct</span> <span class="n">zskiplistNode</span> <span class="o">*</span><span class="n">backward</span><span class="p">;</span>
+    <span class="k">struct</span> <span class="n">zskiplistLevel</span> <span class="p">{</span>
+        <span class="k">struct</span> <span class="n">zskiplistNode</span> <span class="o">*</span><span class="n">forward</span><span class="p">;</span>
+        <span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">span</span><span class="p">;</span>
+    <span class="p">}</span> <span class="n">level</span><span class="p">[];</span>
+<span class="p">}</span> <span class="n">zskiplistNode</span><span class="p">;</span>
+
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">zskiplist</span> <span class="p">{</span>
+    <span class="k">struct</span> <span class="n">zskiplistNode</span> <span class="o">*</span><span class="n">header</span><span class="p">,</span> <span class="o">*</span><span class="n">tail</span><span class="p">;</span>
+    <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">length</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">level</span><span class="p">;</span>
+<span class="p">}</span> <span class="n">zskiplist</span><span class="p">;</span>
+</pre></div>
+
+
+<p>Redis中的zskiplist实现了<code>zslCreate</code>，<code>zslFree</code>，<code>zslInsert</code>，<code>zslDelete</code>等API 。这里就只看下zslInsert的实现，源码放在<code>t_zset.c</code>：</p>
+<div class="codehilite"><pre><span></span><span class="cm">/* Insert a new node in the skiplist. Assumes the element does not already</span>
+<span class="cm"> * exist (up to the caller to enforce that). The skiplist takes ownership</span>
+<span class="cm"> * of the passed SDS string &#39;ele&#39;. */</span>
+<span class="n">zskiplistNode</span> <span class="o">*</span><span class="nf">zslInsert</span><span class="p">(</span><span class="n">zskiplist</span> <span class="o">*</span><span class="n">zsl</span><span class="p">,</span> <span class="kt">double</span> <span class="n">score</span><span class="p">,</span> <span class="n">sds</span> <span class="n">ele</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">zskiplistNode</span> <span class="o">*</span><span class="n">update</span><span class="p">[</span><span class="n">ZSKIPLIST_MAXLEVEL</span><span class="p">],</span> <span class="o">*</span><span class="n">x</span><span class="p">;</span>
+    <span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">rank</span><span class="p">[</span><span class="n">ZSKIPLIST_MAXLEVEL</span><span class="p">];</span>
+    <span class="kt">int</span> <span class="n">i</span><span class="p">,</span> <span class="n">level</span><span class="p">;</span>
+
+    <span class="n">serverAssert</span><span class="p">(</span><span class="o">!</span><span class="n">isnan</span><span class="p">(</span><span class="n">score</span><span class="p">));</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">zsl</span><span class="o">-&gt;</span><span class="n">header</span><span class="p">;</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">i</span> <span class="o">=</span> <span class="n">zsl</span><span class="o">-&gt;</span><span class="n">level</span><span class="o">-</span><span class="mi">1</span><span class="p">;</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">--</span><span class="p">)</span> <span class="p">{</span>
+        <span class="cm">/* store rank that is crossed to reach the insert position */</span>
+        <span class="n">rank</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span> <span class="o">==</span> <span class="p">(</span><span class="n">zsl</span><span class="o">-&gt;</span><span class="n">level</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">?</span> <span class="mi">0</span> <span class="o">:</span> <span class="n">rank</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">];</span>
+        <span class="k">while</span> <span class="p">(</span><span class="n">x</span><span class="o">-&gt;</span><span class="n">level</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">forward</span> <span class="o">&amp;&amp;</span>
+                <span class="p">(</span><span class="n">x</span><span class="o">-&gt;</span><span class="n">level</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">forward</span><span class="o">-&gt;</span><span class="n">score</span> <span class="o">&lt;</span> <span class="n">score</span> <span class="o">||</span>
+                    <span class="p">(</span><span class="n">x</span><span class="o">-&gt;</span><span class="n">level</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">forward</span><span class="o">-&gt;</span><span class="n">score</span> <span class="o">==</span> <span class="n">score</span> <span class="o">&amp;&amp;</span>
+                    <span class="n">sdscmp</span><span class="p">(</span><span class="n">x</span><span class="o">-&gt;</span><span class="n">level</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">forward</span><span class="o">-&gt;</span><span class="n">ele</span><span class="p">,</span><span class="n">ele</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)))</span>
+        <span class="p">{</span>
+            <span class="n">rank</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="n">x</span><span class="o">-&gt;</span><span class="n">level</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">span</span><span class="p">;</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="o">-&gt;</span><span class="n">level</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">forward</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="n">update</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="cm">/* we assume the element is not already inside, since we allow duplicated</span>
+<span class="cm">     * scores, reinserting the same element should never happen since the</span>
+<span class="cm">     * caller of zslInsert() should test in the hash table if the element is</span>
+<span class="cm">     * already inside or not. */</span>
+    <span class="n">level</span> <span class="o">=</span> <span class="n">zslRandomLevel</span><span class="p">();</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">level</span> <span class="o">&gt;</span> <span class="n">zsl</span><span class="o">-&gt;</span><span class="n">level</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">i</span> <span class="o">=</span> <span class="n">zsl</span><span class="o">-&gt;</span><span class="n">level</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">level</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+            <span class="n">rank</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+            <span class="n">update</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">zsl</span><span class="o">-&gt;</span><span class="n">header</span><span class="p">;</span>
+            <span class="n">update</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">level</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">span</span> <span class="o">=</span> <span class="n">zsl</span><span class="o">-&gt;</span><span class="n">length</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="n">zsl</span><span class="o">-&gt;</span><span class="n">level</span> <span class="o">=</span> <span class="n">level</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">zslCreateNode</span><span class="p">(</span><span class="n">level</span><span class="p">,</span><span class="n">score</span><span class="p">,</span><span class="n">ele</span><span class="p">);</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">level</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">x</span><span class="o">-&gt;</span><span class="n">level</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">forward</span> <span class="o">=</span> <span class="n">update</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">level</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">forward</span><span class="p">;</span>
+        <span class="n">update</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">level</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">forward</span> <span class="o">=</span> <span class="n">x</span><span class="p">;</span>
+
+        <span class="cm">/* update span covered by update[i] as x is inserted here */</span>
+        <span class="n">x</span><span class="o">-&gt;</span><span class="n">level</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">span</span> <span class="o">=</span> <span class="n">update</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">level</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">span</span> <span class="o">-</span> <span class="p">(</span><span class="n">rank</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">rank</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+        <span class="n">update</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">level</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">span</span> <span class="o">=</span> <span class="p">(</span><span class="n">rank</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">rank</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="cm">/* increment span for untouched levels */</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">i</span> <span class="o">=</span> <span class="n">level</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">zsl</span><span class="o">-&gt;</span><span class="n">level</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">update</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">level</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">span</span><span class="o">++</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="n">x</span><span class="o">-&gt;</span><span class="n">backward</span> <span class="o">=</span> <span class="p">(</span><span class="n">update</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">zsl</span><span class="o">-&gt;</span><span class="n">header</span><span class="p">)</span> <span class="o">?</span> <span class="nb">NULL</span> <span class="o">:</span> <span class="n">update</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">x</span><span class="o">-&gt;</span><span class="n">level</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">forward</span><span class="p">)</span>
+        <span class="n">x</span><span class="o">-&gt;</span><span class="n">level</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">forward</span><span class="o">-&gt;</span><span class="n">backward</span> <span class="o">=</span> <span class="n">x</span><span class="p">;</span>
+    <span class="k">else</span>
+        <span class="n">zsl</span><span class="o">-&gt;</span><span class="n">tail</span> <span class="o">=</span> <span class="n">x</span><span class="p">;</span>
+    <span class="n">zsl</span><span class="o">-&gt;</span><span class="n">length</span><span class="o">++</span><span class="p">;</span>
+    <span class="k">return</span> <span class="n">x</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<h3>有序集合对象</h3>
+<p>Redis有序集合的跳跃表实现使用<code>zset</code>结构作为底层实现，一个zset结构除了包含一个跳跃表结构，还包含一个字典结构。为了让有序集合的查找和范围型操作都尽可能快的执行，Redis选择了同时使用跳跃表和字典两种数据结构。</p>
+<div class="codehilite"><pre><span></span><span class="k">typedef</span> <span class="k">struct</span> <span class="n">zset</span> <span class="p">{</span>
+    <span class="n">dict</span> <span class="o">*</span><span class="n">dict</span><span class="p">;</span>
+    <span class="n">zskiplist</span> <span class="o">*</span><span class="n">zsl</span><span class="p">;</span>
+<span class="p">}</span> <span class="n">zset</span><span class="p">;</span>
+</pre></div>
+
+
+<p>zset结构中的 zsl 跳跃表按分值从小到大保存了所有集合元素，每个跳跃表节点保存了一个集合元素：obj属性保存元素成员，score属性保存了元素分值。通过这个跳跃表，我们可以对有序集合进行范围型操作，比如<code>ZRANK</code>、<code>ZRANGE</code>等命令就是基于跳跃表API来实现的。</p>
+<p>此外，zset结构中的dict字典为有序集合创建了一个从成员到分值的映射。通过这个字典，我们可以以O(1)的复杂度查找给定成员的分值，<code>ZSCORE</code>命令就是根据这实现的。</p>
+<p>本文主要参考<a href="https://book.douban.com/subject/25900156/">Redis设计与实现</a></p>
+
+    
+        <p class=tags>This entry was tagged
+        
+            <a href="/tags/Redis/">Redis</a>
+    
+
+    
+
+    </div>
+    <div class=footer>
+        
+    </div>
+</div>
+
+
+</body>
+</html>

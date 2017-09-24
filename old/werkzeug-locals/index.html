@@ -1,0 +1,203 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset=utf-8>
+    
+        <title>werkzeug —— Context Locals | werkzeug —— Context Locals</title>
+        <link rel="stylesheet" href="/static/style.css" type="text/css">
+        <link href="/feed.atom" rel="alternate" title=" werkzeug —— Context Locals" type="application/atom+xml">
+            <link rel="stylesheet" href="/static/_pygments.css"
+                  type="text/css">
+    
+    <script>
+        var _hmt = _hmt || [];
+        (function() {
+            var hm = document.createElement("script");
+            hm.src = "https://hm.baidu.com/hm.js?7972bc564f84e320d4f261fe1ada61da";
+            var s = document.getElementsByTagName("script")[0];
+            s.parentNode.insertBefore(hm, s);
+        })();
+</script>
+
+</head>
+<body>
+<div class=container>
+    <div class=navbar>
+        
+    </div>
+    <div class=body>
+        
+        <h1 class="title">werkzeug —— Context Locals</h1>
+
+    <p>Python标准库中有一个叫做 <code>thread locals</code>的东西，一个local对象就是一个线程安全和线程隔离的全局变量。也就是说，不管你是往local对象写数据还是读数据，该local对象都会获取当前程序所处的线程，并提取该线程相应的数据。然而，这种做法有一些缺陷。除了多线程，我们还会使用其它的并发方式。一种很流行的做法就是使用<code>greenlets</code>(协程)。</p>
+<p><code>werkzeug.local</code>的出现就是为了解决这个问题的。<code>werkzeug.local</code>和<code>thread local</code>有着类似的功能，但对<code>greenlets</code>也起作用。直奔源码，看看这到底是怎么实现的：</p>
+<h3>Local</h3>
+<div class="codehilite"><pre><span></span><span class="c1"># part of werkzeug.local</span>
+
+<span class="k">class</span> <span class="nc">Local</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;__storage__&#39;</span><span class="p">,</span> <span class="s1">&#39;__ident_func__&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;__storage__&#39;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;__ident_func__&#39;</span><span class="p">,</span> <span class="n">get_ident</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__storage__</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">__ident_func__</span><span class="p">()][</span><span class="n">name</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="n">ident</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__ident_func__</span><span class="p">()</span>
+        <span class="n">storage</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__storage__</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">storage</span><span class="p">[</span><span class="n">ident</span><span class="p">][</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="n">storage</span><span class="p">[</span><span class="n">ident</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">value</span><span class="p">}</span>
+    <span class="c1"># ......</span>
+</pre></div>
+
+
+<p>Local有两个属性<code>__storage__</code>,<code>__ident_func__</code>。<code>__storage__</code>用来存储数；<code>__ident_func__</code>的值为<code>get_ident</code>，从下面代码可以看出该函数是用来获取当前线程ID或者greenlet对象。（简单起见，下文中线程、协程、greenlet对象均表示同一意思）</p>
+<div class="codehilite"><pre><span></span><span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">greenlet</span> <span class="kn">import</span> <span class="n">getcurrent</span> <span class="k">as</span> <span class="n">get_ident</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">thread</span> <span class="kn">import</span> <span class="n">get_ident</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">_thread</span> <span class="kn">import</span> <span class="n">get_ident</span>
+</pre></div>
+
+
+<p>werkzeug.local实现线程数据安全的关键是重写了<code>__setattr__</code>和<code>__getattr__</code>这两个两个魔术方法。重写了这两个魔术方法之后。<code>l.some_attr</code>(<code>l=Local()</code>)就不再是它看上去那么简单了：</p>
+<ul>
+<li>它首先调用<code>get_ident</code>方法获取当前线程／协程ID</li>
+<li>然后对这个ID空间下的<code>some_attr</code>属性进行读写</li>
+<li>也就是说<code>l.some_attr</code>相当于<code>l.__storage__[get_ident()].some_attr</code></li>
+</ul>
+<p>简单说，werkzeug就是在Local中构建一个内部字典<code>__storage__</code>用来保存线程资源，字典的key是线程／协程ID，字典value就是对应线程／协程的资源(资源也是以key-value对的字典形式表示)。但是直接通过线程ID这个key访问相应的资源就显得太丑了，werkzeug重写了<code>__setattr__</code>等魔术方法很巧妙地解决了这个问题。</p>
+<p>werkzeug还定义<code>LocalStack</code>、<code>LocalProxy</code>等类，这些类在web框架设计中也很常用。</p>
+<h3>LocalStack</h3>
+<p>LocalStack，顾名思义</p>
+<blockquote>
+<p>a local object with  a stack instead</p>
+</blockquote>
+<p>也就是说，LocalStack和Local的工作方法差不多一样，Local以属性的形式存取线程资源，而LocalStack是以栈的形式存取线程资源。看看例子就明白了：</p>
+<p><img alt="local_and_localstack" src="/../img/local_and_localstack.png"></p>
+<p>LocalStack源码如下，</p>
+<div class="codehilite"><pre><span></span><span class="c1"># part of werkzeug.local</span>
+<span class="k">class</span> <span class="nc">LocalStack</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_local</span> <span class="o">=</span> <span class="n">Local</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">push</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+        <span class="n">rv</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_local</span><span class="p">,</span> <span class="s1">&#39;stack&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">rv</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_local</span><span class="o">.</span><span class="n">stack</span> <span class="o">=</span> <span class="n">rv</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">rv</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">rv</span>
+
+    <span class="k">def</span> <span class="nf">pop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">stack</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_local</span><span class="p">,</span> <span class="s1">&#39;stack&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">stack</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">stack</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">release_local</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_local</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">stack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">stack</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">top</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_local</span><span class="o">.</span><span class="n">stack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">AttributeError</span><span class="p">,</span> <span class="ne">IndexError</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">None</span>
+    <span class="c1"># ......</span>
+</pre></div>
+
+
+<p>LocalStack的实现比较简单。</p>
+<ul>
+<li>当我们创建一个LocalStack对象时，我们也创建了一个内部Local对象</li>
+<li>LocalStack对象push、pop、top等方法实际上也代理到内部Local对象上</li>
+</ul>
+<h3>LocalProxy</h3>
+<p>LocalProxy，顾名思义，</p>
+<blockquote>
+<p>a localproxy acts as a proxy for a werkzeug local</p>
+</blockquote>
+<p>关于代理，可以参考<a href="https://quanke.gitbooks.io/design-pattern-java/content/%E4%BB%A3%E7%90%86%E6%A8%A1%E5%BC%8F-Proxy%20Pattern.html">这几篇文章</a>，它们很好地向我们阐述了代理模式。</p>
+<p>一个LocalProxy对象就是一个Local对象的代理。我们对LocalProxy对象的操作都会转发到Local对象上。来看看例子吧：</p>
+<p><img alt="localproxy" src="/../img/localproxy.png"></p>
+<p>上面，我们创建了一个Local对象<code>l</code>，给<code>l</code>添加个<code>request</code>属性；然后创建一个LocalProxy对象<code>lp</code>，代理到<code>l</code>的<code>request</code>上。我们对<code>lp</code>的操作都实际上作用到<code>l.request</code>上。</p>
+<p>LocalProxy除了可以代理Local对象，还可以代理其它对象，只需将对象工厂函数传递给LocalProxy构造函数即可。见下：</p>
+<p><img alt="localproxy2" src="/../img/localproxy2.png"></p>
+<p>那么，这个ProxyPython是怎么实现的呢？答案就在源码里：</p>
+<div class="codehilite"><pre><span></span><span class="nd">@implements_bool</span>
+<span class="k">class</span> <span class="nc">LocalProxy</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;__local&#39;</span><span class="p">,</span> <span class="s1">&#39;__dict__&#39;</span><span class="p">,</span> <span class="s1">&#39;__name__&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">local</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_LocalProxy__local&#39;</span><span class="p">,</span> <span class="n">local</span><span class="p">)</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;__name__&#39;</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_current_object</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__local</span><span class="p">,</span> <span class="s1">&#39;__release_local__&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__local</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__local</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;no object bound to </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;__members__&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">dir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_current_object</span><span class="p">())</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_current_object</span><span class="p">(),</span> <span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_get_current_object</span><span class="p">()[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="fm">__setattr__</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">v</span><span class="p">:</span> <span class="nb">setattr</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">_get_current_object</span><span class="p">(),</span> <span class="n">n</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+    <span class="fm">__getitem__</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">_get_current_object</span><span class="p">()[</span><span class="n">i</span><span class="p">]</span>
+    <span class="fm">__iter__</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">iter</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">_get_current_object</span><span class="p">())</span>
+    <span class="fm">__contains__</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">x</span><span class="o">.</span><span class="n">_get_current_object</span><span class="p">()</span>
+    <span class="fm">__add__</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">o</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">_get_current_object</span><span class="p">()</span> <span class="o">+</span> <span class="n">o</span>
+    <span class="fm">__sub__</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">o</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">_get_current_object</span><span class="p">()</span> <span class="o">-</span> <span class="n">o</span>
+
+    <span class="c1"># ......</span>
+</pre></div>
+
+
+<ul>
+<li>在构造函数<code>__init__</code>中，通过<code>__setattr__</code>函数，LocalProxy对象的<code>_LocalProxy__local</code>被设置为local，这个属性的名字比较奇怪，可以简单的认为为<code>self.__local = local</code>(具体可以参考<a href="http://docs.python.org/2/tutorial/classes.html#private-variables-and-class-local-references">这里</a>)</li>
+<li>LocalProxy对象通过<code>_get_current_object</code>获取代理的对象，在这个方法中，proxy通过判断代理对象是否含有<code>__release_local__</code>属性来判断代理对象是一个<code>werkzeug Local</code>对象还是一个普通对象。</li>
+<li>接下来就是一大段一大段的重载魔术方法。LocalProxy几乎重载了所有的魔术方法，让所有关于它的操作都转发到通过<code>_get_current_object</code>获取的代理对象上。</li>
+</ul>
+<h3>小结</h3>
+<p>至此，我们通过阅读源码，以及提供简单的例子，学习了<code>werkzeug.local</code>中主要的类。先总结如下：</p>
+<ul>
+<li><code>Local</code>：和标准库<code>threading.local</code>功能类似，但对greenlet也起作用</li>
+<li><code>LocalStack</code>：和<code>Local</code>类似，但一般通过栈访问线程资源</li>
+<li><code>LocalProxy</code>：一般涌来代理<code>Local</code>对象</li>
+</ul>
+<p>The end.</p>
+
+    
+        <p class=tags>This entry was tagged
+        
+            <a href="/tags/werkzeug/">werkzeug</a>
+    
+
+    
+
+    </div>
+    <div class=footer>
+        
+    </div>
+</div>
+
+
+</body>
+</html>

@@ -1,0 +1,295 @@
+@charset "utf-8";
+
+/* general style */
+
+body {
+    font-family: "lucida grande", "lucida sans unicode", lucida, helvetica, "Hiragino Sans GB", "Microsoft YaHei", "WenQuanYi Micro Hei", sans-serif;
+    font-size: 18px;
+}
+
+a {
+    color: #398ad5;
+}
+
+a:hover {
+    color: #2771b5;
+}
+
+img {
+    display: block;
+    box-shadow: 0 0 10px #555;
+    border-radius: 6px;
+    margin: 1.5em auto 1.6em auto;
+    max-width: 90%;
+    height: auto;
+    vertical-align: middle;
+    -webkit-box-shadow: 0 0 10px #555;
+}
+
+/* headlines */
+h1, h2, h3, h4, h5, h6 {
+    font-family: "Palatino Linotype", "Book Antiqua", Palatino, Helvetica, STKaiti, SimSun, serif;
+    color: #2771b5;
+}
+
+h1 a, h2 a, h3 a, h4 a,
+h5 a, h6 a {
+    text-decoration: none;
+}
+
+h1 a:hover, h2 a:hover,
+h3 a:hover, h4 a:hover {
+    text-decoration: underline;
+}
+
+h1 {
+    margin: 60px 0 40px 0;
+    font-size: 1.65em;
+    padding: 5px;
+    width: 98%;
+    line-height: 150%;
+}
+
+h2 {
+    margin: 40px 0 30px 0;
+    font-size: 1.45em;
+    width: 98%;
+    line-height: 150%;
+}
+
+h3 {
+    margin: 40px 0 30px 0;
+    font-size: 1.3em;
+    width: 98%;
+    line-height: 150%;
+}
+
+/* layout elements */
+div.container {
+    max-width: 880px;
+    margin: 3% auto;
+    padding: 0 40px;
+}
+
+div.navbar a {
+    text-decoration: none;
+}
+
+div.navigation-header {
+    float: left;
+    font-size: 24px;
+    color: #2771b5;
+}
+
+div.navigation {
+    float: right;
+}
+
+div.navigation-header, div.navigation {
+    height: 25px;
+    margin-bottom: 42px;
+}
+
+div.navigation ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+div.navigation ul li {
+    display: inline;
+    margin: 0 2px;
+    padding: 0;
+}
+
+div.body {
+    clear: both;
+    margin: 0 2%;
+    line-height: 1.6;
+}
+
+div.footer {
+    margin-top: 55px;
+    font-size: 16px;
+    text-align: right;
+    color: #7b8894;
+}
+
+div.footer p {
+    margin: 0;
+}
+
+div.footer a {
+    color: #7b8894;
+}
+
+/* margins and stuff */
+p, div.line-block, ul, ol, pre,
+table {
+    margin: 15px 0 15px 0;
+}
+
+dt {
+    margin: 25px 0 16px 0;
+    padding: 0;
+}
+
+dd {
+    margin: 16px 0 25px 40px;
+    padding: 0;
+}
+
+ul ol, ol ul, ul ul, ol ol {
+    margin: 10px 0;
+    padding: 0 0 0 40px;
+}
+
+li {
+    padding: 0;
+}
+
+h1 + p.date {
+    margin-top: -25px;
+    font-style: italic;
+}
+
+/* code formatting */
+pre, code, tt {
+    font-family: Inconsolata, Consolas, "DEJA VU SANS MONO", "DROID SANS MONO", Proggy, monospace;
+    font-size: 90%;
+}
+
+pre {
+    display: block;
+    padding: 9px;
+    line-height: 1.4;
+    border-radius: 6px;
+    margin: 1.5em auto 1.6em auto;
+    height: auto;
+    vertical-align: middle;
+    background-color: #F4F4F4;
+    border: 1px solid #E0E0E0;
+    max-width: 95%;
+}
+
+code, tt {
+    padding: 2px 4px;
+    background-color: #f9f2f4;
+    border-radius: 4px;
+    color: #c7254e;
+}
+
+blockquote {
+    border-left: 5px lightgrey solid;
+    padding-left: 15px;
+    margin-left: 20px;
+    background: #f4f4f4;
+}
+
+/* tables */
+table {
+    border: 1px solid #ddd;
+    border-collapse: collapse;
+    background: #fafafa;
+}
+
+td, th {
+    padding: 2px 12px;
+    border: 1px solid #ddd;
+}
+
+/* footnotes */
+table.footnote {
+    margin: 25px 0;
+    background: transparent;
+    border: none;
+}
+
+table.footnote + table.footnote {
+    margin-top: -35px;
+}
+
+table.footnote td {
+    border: none;
+    padding: 9px 0 0 0;
+    font-size: 15px;
+}
+
+table.footnote td.label {
+    padding-right: 10px;
+}
+
+table.footnote td p {
+    margin: 0;
+}
+
+table.footnote td p + p {
+    margin-top: 15px;
+}
+
+/* blog overview */
+div.entry-overview {
+    margin: 25px 122px 25px 102px;
+}
+
+div.entry-overview div.date {
+    float: left;
+    width: 120px;
+    color: #7b8894;
+    text-align: right;
+    padding: 5px 0 5px 0;
+    font-size: 14px;
+}
+
+div.entry-overview div.detail {
+    margin-left: 140px;
+}
+
+div.entry-overview h1 {
+    display: inline;
+    line-height: 25px;
+    margin: 0;
+    font-size: 20px;
+}
+
+div.entry-overview h1 a {
+    color: #2771b5;
+}
+
+div.entry-overview div.summary {
+    display: inline;
+    line-height: 25px;
+    font-size: 15px;
+    color: #394856;
+}
+
+/* pagination */
+div.pagination {
+    margin: 36px 0 0 0;
+    text-align: center;
+}
+
+div.pagination strong {
+    font-style: italic;
+}
+
+/* tags */
+p.tags {
+    text-align: right;
+    margin-top: 35px;
+}
+
+ul.tagcloud {
+    font-size: 16px;
+    margin: 36px 0;
+    padding: 0;
+    list-style: none;
+    line-height: 1.45;
+    text-align: justify
+}
+
+ul.tagcloud li {
+    margin: 0;
+    padding: 0 10px;
+    display: inline;
+}

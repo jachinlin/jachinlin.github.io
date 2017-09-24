@@ -1,0 +1,99 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset=utf-8>
+    
+        <title>WSGI 初探 | WSGI 初探</title>
+        <link rel="stylesheet" href="/static/style.css" type="text/css">
+        <link href="/feed.atom" rel="alternate" title=" WSGI 初探" type="application/atom+xml">
+            <link rel="stylesheet" href="/static/_pygments.css"
+                  type="text/css">
+    
+    <script>
+        var _hmt = _hmt || [];
+        (function() {
+            var hm = document.createElement("script");
+            hm.src = "https://hm.baidu.com/hm.js?7972bc564f84e320d4f261fe1ada61da";
+            var s = document.getElementsByTagName("script")[0];
+            s.parentNode.insertBefore(hm, s);
+        })();
+</script>
+
+</head>
+<body>
+<div class=container>
+    <div class=navbar>
+        
+    </div>
+    <div class=body>
+        
+        <h1 class="title">WSGI 初探</h1>
+
+    <p>web服务器需要接收HTTP请求、解析HTTP请求以及发送HTTP响应，处理这些底层操作是十分耗时的，且容易出错。为了提高web服务的开发效率，人们定义了一个接口——<code>WSGI</code> (Web Server Gateway Interfere)——将web服务器分成了两部分：</p>
+<ul>
+<li>web 服务器：也称为<code>wsgi server</code></li>
+<li>web 应用：也称为<code>wsgi application</code></li>
+</ul>
+<p>web服务器需要根据语境才能区分具体是指广义的服务器还是狭义的服务器。<code>wsgi server</code>主要负责处理TCP连接、处理HTTP原始请求以及发送HTTP响应；而<code>wsgi application</code>则专注于web业务。其他编程语言也拥有类似的接口：例如Java的<code>Servlet API</code>和Ruby的<code>Rack</code>。</p>
+<p><img alt="wsgi" src="/../img/wsgi.jpg"></p>
+<h3>wsgi application</h3>
+<p><code>WSGI</code>接口非常简单，它要求<code>wsgi application</code> 实现一个函数<code>application</code>。这个函数接受两个参数</p>
+<ul>
+<li>
+<p><code>environ</code></p>
+</li>
+<li>
+<p><code>start_response</code></p>
+</li>
+</ul>
+<p>这两个参数由<code>wsgi server</code>传递给<code>application</code>。<code>environ</code>是一个包含了所有HTTP请求信息的字典；<code>start_response</code>是一个函数，需要在<code>applicataion</code>中调用，它负责将HTTP响应状态码以及头部发送到<code>wsgi server</code>。有了WSGI接口，<code>application</code>只需要：</p>
+<ol>
+<li>从<code>environ</code>获取HTTP请求信息</li>
+<li>根据不同的请求信息构建不同的响应body</li>
+<li>通过<code>start_response</code>向wsgi发送响应状态码、header</li>
+<li>返回响应body。</li>
+</ol>
+<p>而不用关心处理TCP连接等底层代码。</p>
+<p>下面就是一个极简application：</p>
+<div class="codehilite"><pre><span></span><span class="c1"># client.py</span>
+<span class="k">def</span> <span class="nf">application</span><span class="p">(</span><span class="n">environ</span><span class="p">,</span> <span class="n">start_response</span><span class="p">):</span>
+  <span class="c1"># parse the environ</span>
+  <span class="n">start_response</span><span class="p">(</span><span class="s1">&#39;200 OK&#39;</span><span class="p">,</span> <span class="p">[(</span><span class="s1">&#39;Content-Type&#39;</span><span class="p">,</span> <span class="s1">&#39;text/html&#39;</span><span class="p">)])</span>
+  <span class="k">return</span> <span class="p">[</span><span class="s1">&#39;&lt;h1&gt;Hello Web!&lt;/h1&gt;&#39;</span><span class="p">]</span>
+</pre></div>
+
+
+<p>其实，<code>application</code>也可以是类、实现了<code>__call__</code>方法的类实例等可调用对象。在大多数web框架中，<code>application</code>是通过类实例表示的。</p>
+<h3>wsgi server</h3>
+<p>wsgi server 则负责提供environ和start_response参数，并调用application；以及实现处理TCP连接、处理HTTP原始请求、发送HTTP响应等底层逻辑。</p>
+<p>常用的 wsgi server 有<code>Gunicorn</code> 和 <code>Tornado</code>。Python的 <code>wsgiref</code> 模块也内置了一个 wsgi server ，该服务器完全符合 WSGI 协议，但性能低下，只能用于开发和测试。下面，我们就 wsgiref 模块来看 wsgi server 是如何加载 application 的：</p>
+<div class="codehilite"><pre><span></span><span class="c1"># server.py</span>
+<span class="kn">from</span> <span class="nn">wsgiref.simple_server</span> <span class="kn">import</span> <span class="n">make_server</span>
+<span class="kn">from</span> <span class="nn">client</span> <span class="kn">import</span> <span class="n">application</span>
+
+<span class="c1"># 创建一个服务器，IP地址为空，端口是8000，处理函数是application:</span>
+<span class="n">httpd</span> <span class="o">=</span> <span class="n">make_server</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="mi">8000</span><span class="p">,</span> <span class="n">application</span><span class="p">)</span>
+<span class="c1"># 开始监听HTTP请求:</span>
+<span class="n">httpd</span><span class="o">.</span><span class="n">serve_forever</span><span class="p">()</span>
+</pre></div>
+
+
+<p>一个简单的web服务就这么生成了。启动程序，在浏览器地址栏输入<code>http://localhost:8000/</code>就能看到咱们的劳动成果了。</p>
+
+    
+        <p class=tags>This entry was tagged
+        
+            <a href="/tags/wsgi/">wsgi</a>
+    
+
+    
+
+    </div>
+    <div class=footer>
+        
+    </div>
+</div>
+
+
+</body>
+</html>
