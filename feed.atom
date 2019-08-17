@@ -5,7 +5,7 @@
   <updated>2018-07-20T00:00:00Z</updated>
   <link href="https://jachinlin.github.io/" />
   <link href="https://jachinlin.github.io/feed.atom" rel="self" />
-  <subtitle type="text">jachinlin's personal blog about programming, games and random thoughts that come to his mind.</subtitle>
+  <subtitle type="text">jachinlin's personal blog about programming and random thoughts that come to his mind.</subtitle>
   <generator>Werkzeug</generator>
   <entry xml:base="https://jachinlin.github.io/feed.atom">
     <title type="text">令牌桶算法</title>
