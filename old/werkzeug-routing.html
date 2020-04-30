@@ -5,6 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>werkzeug —— URL Routing | werkzeug —— URL Routing</title>
+    <link rel="shortcut icon" href="/favicon.ico">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous" media="screen">
     <link rel="stylesheet" href="/static/style.css" type="text/css">
     <link href="/feed.atom" rel="alternate" title=" werkzeug —— URL Routing" type="application/atom+xml">
@@ -25,16 +26,16 @@
 </head>
 
 <body>
-<div class="box">
+<div class="container box">
 
 
 
-<div class="container">
-        <h1 class="title">werkzeug —— URL Routing</h1>
+<div>
+        <h1>werkzeug —— URL Routing</h1>
 
     <p>当wsgi应用涉及到多URL或者多视图函数时，我们就需要一个分发器。分发器的作用就是根据请求的url路径<code>PATH_INFO</code>找到相对应的视图函数，并返回一个响应。一个简单的做法就是在<code>PATH_INFO</code>上使用正则表达式，然后找到注册的回调函数。werkzeug就是这么做的，不过提供更强大的功能。</p>
 <p>下面就是一个使用werkzeug.routing简单的例子。</p>
-<div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">werkzeug.routing</span> <span class="kn">import</span> <span class="n">Map</span><span class="p">,</span> <span class="n">Rule</span><span class="p">,</span> <span class="n">NotFound</span><span class="p">,</span> <span class="n">RequestRedirect</span>
+<div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">werkzeug.routing</span> <span class="kn">import</span> <span class="n">Map</span><span class="p">,</span> <span class="n">Rule</span><span class="p">,</span> <span class="n">NotFound</span><span class="p">,</span> <span class="n">RequestRedirect</span>
 
 <span class="n">url_map</span> <span class="o">=</span> <span class="n">Map</span><span class="p">([</span>
     <span class="n">Rule</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="n">endpoint</span><span class="o">=</span><span class="s1">&#39;blog/index&#39;</span><span class="p">),</span>
@@ -51,7 +52,7 @@
         <span class="k">return</span> <span class="n">e</span><span class="p">(</span><span class="n">environ</span><span class="p">,</span> <span class="n">start_response</span><span class="p">)</span>
     <span class="n">start_response</span><span class="p">(</span><span class="s1">&#39;200 OK&#39;</span><span class="p">,</span> <span class="p">[(</span><span class="s1">&#39;Content-Type&#39;</span><span class="p">,</span> <span class="s1">&#39;text/plain&#39;</span><span class="p">)])</span>
     <span class="k">return</span> <span class="p">[</span><span class="s1">&#39;Rule points to </span><span class="si">%r</span><span class="s1"> with arguments </span><span class="si">%r</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">endpoint</span><span class="p">,</span> <span class="n">args</span><span class="p">)]</span>
-</pre></div>
+</code></pre></div>
 
 
 <h3>Map</h3>
@@ -90,7 +91,7 @@
 <li>Endpoint：enpoint可以是任何数据对象，它的作用就是用来标识一个视图函数，至于endpoint和视图函数之间如何映射，werkzeug并没有约束我们，我们可以随心所欲。</li>
 </ul>
 <p>Rule对象绑定到Map对象时，会创建该对象的正则表达式，并保存在<code>_regex</code>属性中：</p>
-<div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">bind</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">map</span><span class="p">,</span> <span class="n">rebind</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">bind</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">map</span><span class="p">,</span> <span class="n">rebind</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
   <span class="c1"># ......</span>
   <span class="bp">self</span><span class="o">.</span><span class="n">map</span> <span class="o">=</span> <span class="nb">map</span>
   <span class="bp">self</span><span class="o">.</span><span class="n">compile</span><span class="p">()</span>
@@ -98,7 +99,7 @@
 
 <span class="k">def</span> <span class="nf">compile</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Compiles the regular expression and stores it.&quot;&quot;&quot;</span>
-    <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">map</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">,</span> <span class="s1">&#39;rule not bound&#39;</span>
+    <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">map</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;rule not bound&#39;</span>
 
     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">map</span><span class="o">.</span><span class="n">host_matching</span><span class="p">:</span>
         <span class="n">domain_rule</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">host</span> <span class="ow">or</span> <span class="s1">&#39;&#39;</span>
@@ -112,9 +113,9 @@
 
     <span class="k">def</span> <span class="nf">_build_regex</span><span class="p">(</span><span class="n">rule</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">converter</span><span class="p">,</span> <span class="n">arguments</span><span class="p">,</span> <span class="n">variable</span> <span class="ow">in</span> <span class="n">parse_rule</span><span class="p">(</span><span class="n">rule</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">converter</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">converter</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">regex_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">variable</span><span class="p">))</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_trace</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">False</span><span class="p">,</span> <span class="n">variable</span><span class="p">))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_trace</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="kc">False</span><span class="p">,</span> <span class="n">variable</span><span class="p">))</span>
                 <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">variable</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">):</span>
                     <span class="k">if</span> <span class="n">part</span><span class="p">:</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">_weights</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">part</span><span class="p">)))</span>
@@ -128,16 +129,16 @@
                     <span class="n">variable</span><span class="p">,</span> <span class="n">converter</span><span class="p">,</span> <span class="n">c_args</span><span class="p">,</span> <span class="n">c_kwargs</span><span class="p">)</span>
                 <span class="n">regex_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;(?P&lt;</span><span class="si">%s</span><span class="s1">&gt;</span><span class="si">%s</span><span class="s1">)&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">variable</span><span class="p">,</span> <span class="n">convobj</span><span class="o">.</span><span class="n">regex</span><span class="p">))</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_converters</span><span class="p">[</span><span class="n">variable</span><span class="p">]</span> <span class="o">=</span> <span class="n">convobj</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_trace</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">True</span><span class="p">,</span> <span class="n">variable</span><span class="p">))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_trace</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="kc">True</span><span class="p">,</span> <span class="n">variable</span><span class="p">))</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_weights</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="n">convobj</span><span class="o">.</span><span class="n">weight</span><span class="p">))</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">arguments</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">variable</span><span class="p">))</span>
 
     <span class="n">_build_regex</span><span class="p">(</span><span class="n">domain_rule</span><span class="p">)</span>
     <span class="n">regex_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\\</span><span class="s1">|&#39;</span><span class="p">)</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">_trace</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">False</span><span class="p">,</span> <span class="s1">&#39;|&#39;</span><span class="p">))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_trace</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;|&#39;</span><span class="p">))</span>
     <span class="n">_build_regex</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">is_leaf</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">rule</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">rule</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">))</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_leaf</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_trace</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">False</span><span class="p">,</span> <span class="s1">&#39;/&#39;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_trace</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;/&#39;</span><span class="p">))</span>
 
     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_only</span><span class="p">:</span>
         <span class="k">return</span>
@@ -147,22 +148,22 @@
         <span class="s1">&#39;(?&lt;!/)(?P&lt;__suffix__&gt;/?)&#39;</span> <span class="ow">or</span> <span class="s1">&#39;&#39;</span>
     <span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_regex</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">regex</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">UNICODE</span><span class="p">)</span>
-</pre></div>
+</code></pre></div>
 
 
 <h3>MapAdapter</h3>
 <p>在wsgi应用中，我们把当前请求绑定到url_map中，得到一个<code>MapAdapter</code>对象urls。这个urls对象可以通过<code>MapAdapter.match()</code>方法来匹配当前请求。正常情况下，该方法会返回一个元组<code>(endpoint, args)</code> ，endpoint就是当前请求对应的端点，args就是相应的参数。</p>
 <p>最后，我们直接把<code>(endpoint, args)</code>返回给客户端。实际运用中，我们会根据endpoint获取不同的视图函数，在视图函数中生成相应的http响应。</p>
 <p>将一条URL规则的实例<code>Rule</code>添加进<code>Map</code>实例的时候，会为这个<code>Rule</code>生成一个正则表达式的属性<code>_regex</code>。<code>MapAdapter.match()</code>实际上会将请求中的url和每一条URL规则的正则表达式进行匹配。如果匹配成功，则会返回<code>endpoint</code>和一些参数。具体实现见下：</p>
-<div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">match</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path_info</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">return_rule</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
-          <span class="n">query_args</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">match</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path_info</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">return_rule</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+          <span class="n">query_args</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 
     <span class="bp">self</span><span class="o">.</span><span class="n">map</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
-    <span class="k">if</span> <span class="n">path_info</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">path_info</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">path_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">path_info</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">path_info</span> <span class="o">=</span> <span class="n">to_unicode</span><span class="p">(</span><span class="n">path_info</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">map</span><span class="o">.</span><span class="n">charset</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">query_args</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">query_args</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">query_args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">query_args</span>
     <span class="n">method</span> <span class="o">=</span> <span class="p">(</span><span class="n">method</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_method</span><span class="p">)</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
 
@@ -182,19 +183,19 @@
         <span class="k">except</span> <span class="n">RequestAliasRedirect</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">RequestRedirect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">make_alias_redirect_url</span><span class="p">(</span>
                 <span class="n">path</span><span class="p">,</span> <span class="n">rule</span><span class="o">.</span><span class="n">endpoint</span><span class="p">,</span> <span class="n">e</span><span class="o">.</span><span class="n">matched_values</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">query_args</span><span class="p">))</span>
-        <span class="k">if</span> <span class="n">rv</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">rv</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">continue</span>
-        <span class="k">if</span> <span class="n">rule</span><span class="o">.</span><span class="n">methods</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">method</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">rule</span><span class="o">.</span><span class="n">methods</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">rule</span><span class="o">.</span><span class="n">methods</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">method</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">rule</span><span class="o">.</span><span class="n">methods</span><span class="p">:</span>
             <span class="n">have_match_for</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">rule</span><span class="o">.</span><span class="n">methods</span><span class="p">)</span>
             <span class="k">continue</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">map</span><span class="o">.</span><span class="n">redirect_defaults</span><span class="p">:</span>
             <span class="n">redirect_url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_default_redirect</span><span class="p">(</span><span class="n">rule</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">rv</span><span class="p">,</span>
                                                      <span class="n">query_args</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">redirect_url</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">redirect_url</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">RequestRedirect</span><span class="p">(</span><span class="n">redirect_url</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">rule</span><span class="o">.</span><span class="n">redirect_to</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">rule</span><span class="o">.</span><span class="n">redirect_to</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rule</span><span class="o">.</span><span class="n">redirect_to</span><span class="p">,</span> <span class="n">string_types</span><span class="p">):</span>
                 <span class="k">def</span> <span class="nf">_handle_match</span><span class="p">(</span><span class="n">match</span><span class="p">):</span>
                     <span class="n">value</span> <span class="o">=</span> <span class="n">rv</span><span class="p">[</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)]</span>
@@ -218,15 +219,14 @@
     <span class="k">if</span> <span class="n">have_match_for</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">MethodNotAllowed</span><span class="p">(</span><span class="n">valid_methods</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">have_match_for</span><span class="p">))</span>
     <span class="k">raise</span> <span class="n">NotFound</span><span class="p">()</span>
-</pre></div>
+</code></pre></div>
 
 
 <p>The end.</p>
 
     
-        <p class=tags>This entry was tagged
-        
-            <a href="/tags/werkzeug/">werkzeug</a>
+        <p class=tags>标签：
+        <a href="/tags/werkzeug/">werkzeug</a>
     
 
     
@@ -234,9 +234,8 @@
 
 
 
-
+</div>
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
-</div>
 </body>
 </html>

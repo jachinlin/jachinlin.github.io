@@ -5,6 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>Protocol Buffer 基础 | Protocol Buffer 基础</title>
+    <link rel="shortcut icon" href="/favicon.ico">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous" media="screen">
     <link rel="stylesheet" href="/static/style.css" type="text/css">
     <link href="/feed.atom" rel="alternate" title=" Protocol Buffer 基础" type="application/atom+xml">
@@ -25,12 +26,12 @@
 </head>
 
 <body>
-<div class="box">
+<div class="container box">
 
 
 
-<div class="container">
-        <h1 class="title">Protocol Buffer 基础</h1>
+<div>
+        <h1>Protocol Buffer 基础</h1>
 
     <h2>序列化</h2>
 <p>我们知道，在 TCP 的连接上，它传输数据的基本形式就是二进制流或者比特流，也就是一段一段的 1 和 0。在一般网络框架提供的 API 中，数据传输的形式是字节，也就是 Byte，一个字节就是8个二进制位，所以在这里，二进制流和字节流本质是一样的。</p>
@@ -39,13 +40,13 @@
 <p>序列化的用途除了用于在网络上传输数据以外，另外的一个重要用途是，将结构化数据保存在文件中，因为在文件内保存数据的形式也是二进制序列，和网络传输过程中的数据是一样的，所以序列化同样适用于将结构化数据保存在文件中。</p>
 <p>很多处理海量数据的场景中，都需要将对象序列化后，把他们暂时从内存转移到磁盘中，等需要用的时候，再把数据从磁盘中读取出来，反序列化成对象来使用，这样不仅可以长期保存不丢失数据，而且可以节省有限的内存空间。</p>
 <p>如果说，只是实现序列化和反序列化的功能，并不难，方法也有很多。比如，现在编程语言都内置了序列化实现，比如 Python 中的 pickle 模块：</p>
-<div class="codehilite"><pre><span></span><span class="n">In</span> <span class="p">[</span><span class="mi">1</span><span class="p">]:</span> <span class="kn">import</span> <span class="nn">pickle</span>
+<div class="codehilite"><pre><span></span><code><span class="n">In</span> <span class="p">[</span><span class="mi">1</span><span class="p">]:</span> <span class="kn">import</span> <span class="nn">pickle</span>
 <span class="n">In</span> <span class="p">[</span><span class="mi">2</span><span class="p">]:</span> <span class="n">user</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;jachinlin&#39;</span><span class="p">,</span> <span class="n">sex</span><span class="o">=</span><span class="s1">&#39;男&#39;</span><span class="p">)</span>
 <span class="n">In</span> <span class="p">[</span><span class="mi">3</span><span class="p">]:</span> <span class="n">pickle</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">user</span><span class="p">)</span>
 <span class="n">Out</span><span class="p">[</span><span class="mi">3</span><span class="p">]:</span> <span class="sa">b</span><span class="s1">&#39;</span><span class="se">\x80\x03</span><span class="s1">}q</span><span class="se">\x00</span><span class="s1">(X</span><span class="se">\x04\x00\x00\x00</span><span class="s1">nameq</span><span class="se">\x01</span><span class="s1">X</span><span class="se">\t\x00\x00\x00</span><span class="s1">jachinlinq</span><span class="se">\x02</span><span class="s1">X</span><span class="se">\x03\x00\x00\x00</span><span class="s1">sexq</span><span class="se">\x03</span><span class="s1">X</span><span class="se">\x03\x00\x00\x00\xe7\x94\xb7</span><span class="s1">q</span><span class="se">\x04</span><span class="s1">u.&#39;</span>
 <span class="n">In</span> <span class="p">[</span><span class="mi">4</span><span class="p">]:</span>  <span class="n">pickle</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;</span><span class="se">\x80\x03</span><span class="s1">}q</span><span class="se">\x00</span><span class="s1">(X</span><span class="se">\x04\x00\x00\x00</span><span class="s1">nameq</span><span class="se">\x01</span><span class="s1">X</span><span class="se">\t\x00\x00\x00</span><span class="s1">jachinlinq</span><span class="se">\x02</span><span class="s1">X</span><span class="se">\x03\x00\x00\x00</span><span class="s1">sexq</span><span class="se">\x03</span><span class="s1">X</span><span class="se">\x03\x00\x00\x00\xe7\x94\xb7</span><span class="s1">q</span><span class="se">\x04</span><span class="s1">u.&#39;</span><span class="p">)</span>
 <span class="n">Out</span><span class="p">[</span><span class="mi">4</span><span class="p">]:</span>  <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;jachinlin&#39;</span><span class="p">,</span> <span class="s1">&#39;sex&#39;</span><span class="p">:</span> <span class="s1">&#39;男&#39;</span><span class="p">}</span>
-</pre></div>
+</code></pre></div>
 
 
 <p>pickle 的问题和所有其他编程语言特有的序列化内置模块一样，就是它只能用于 Python，并且可能不同版本的 Python 彼此都不兼容。</p>
@@ -72,20 +73,20 @@
 <h3>准备工作</h3>
 <p>首先，我们需要安装 protobuf 编译器。</p>
 <p>protobuf 的 GitHub 地址上有各种语言的编译打包好的二进制文件，咱们选择相应系统版本的编译器直接下载然后解压即可，这里我以 mac OS 为例：</p>
-<div class="codehilite"><pre><span></span>wget https://github.com/protocolbuffers/protobuf/releases/download/v3.9.1/protoc-3.9.1-osx-x86_64.zip -O protoc.zip  <span class="o">&amp;&amp;</span> unzip protoc.zip -d ~/protoc <span class="o">&amp;&amp;</span>  rm protoc.zip
-</pre></div>
+<div class="codehilite"><pre><span></span><code>wget https://github.com/protocolbuffers/protobuf/releases/download/v3.9.1/protoc-3.9.1-osx-x86_64.zip -O protoc.zip  <span class="o">&amp;&amp;</span> unzip protoc.zip -d ~/protoc <span class="o">&amp;&amp;</span>  rm protoc.zip
+</code></pre></div>
 
 
 <p>接下来是，安装运行依赖库。</p>
 <p>protobuf  的 Python 运行时类库已经发布到 PyPi 了，咱们直接 pip install 一下就可以了。</p>
-<div class="codehilite"><pre><span></span>python3 -m venv .venv
+<div class="codehilite"><pre><span></span><code>python3 -m venv .venv
 <span class="nb">source</span> .venv/bin/activate
 pip isntall protobuf
-</pre></div>
+</code></pre></div>
 
 
 <h3>定义消息格式</h3>
-<div class="codehilite"><pre><span></span><span class="na">syntax</span> <span class="o">=</span> <span class="s">&quot;proto3&quot;</span><span class="p">;</span>
+<div class="codehilite"><pre><span></span><code><span class="na">syntax</span> <span class="o">=</span> <span class="s">&quot;proto3&quot;</span><span class="p">;</span>
 
 <span class="kn">package</span> <span class="nn">tutorial</span><span class="p">;</span>
 
@@ -112,16 +113,16 @@ pip isntall protobuf
 <span class="kd">message</span> <span class="nc">AddressBook</span> <span class="p">{</span>
     <span class="k">repeated</span> <span class="n">Person</span> <span class="na">people</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
 <span class="p">}</span>
-</pre></div>
+</code></pre></div>
 
 
 <h3>编译 proto 文件</h3>
-<div class="codehilite"><pre><span></span> ~/protoc/bin/protoc -I./addressbook --python_out<span class="o">=</span>./addressbook ./addressbook/addressbook.proto
-</pre></div>
+<div class="codehilite"><pre><span></span><code> ~/protoc/bin/protoc -I./addressbook --python_out<span class="o">=</span>./addressbook ./addressbook/addressbook.proto
+</code></pre></div>
 
 
 <h3>开发通讯录应用</h3>
-<div class="codehilite"><pre><span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<div class="codehilite"><pre><span></span><code><span class="c1"># -*- coding: utf-8 -*-</span>
 
 <span class="kn">import</span> <span class="nn">logging</span>
 
@@ -141,9 +142,9 @@ pip isntall protobuf
             <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
                 <span class="n">address_book</span><span class="o">.</span><span class="n">ParseFromString</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
         <span class="k">except</span> <span class="ne">IOError</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;{filename}: File not found. Creating a new file.&quot;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">: File not found. Creating a new file.&quot;</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="bp">None</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_file_name</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
             <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_address_book</span><span class="o">.</span><span class="n">SerializeToString</span><span class="p">())</span>
 
@@ -156,7 +157,7 @@ pip isntall protobuf
         <span class="k">if</span> <span class="n">email</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
             <span class="n">person</span><span class="o">.</span><span class="n">email</span> <span class="o">=</span> <span class="n">email</span>
 
-        <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
             <span class="n">number</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span>
                 <span class="s2">&quot;Enter a phone number (or leave blank to finish): &quot;</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">number</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
@@ -173,26 +174,26 @@ pip isntall protobuf
             <span class="k">elif</span> <span class="n">type_</span> <span class="o">==</span> <span class="s2">&quot;work&quot;</span><span class="p">:</span>
                 <span class="n">phone_number</span><span class="o">.</span><span class="n">type</span> <span class="o">=</span> <span class="n">addressbook_pb2</span><span class="o">.</span><span class="n">Person</span><span class="o">.</span><span class="n">WORK</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Unknown phone type; leaving as default value.&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Unknown phone type; leaving as default value.&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">person</span>
 
-    <span class="k">def</span> <span class="nf">list_people</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="bp">None</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">list_people</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">person</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_address_book</span><span class="o">.</span><span class="n">people</span><span class="p">:</span>
-            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Person ID:&quot;</span><span class="p">,</span> <span class="n">person</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
-            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;  Name:&quot;</span><span class="p">,</span> <span class="n">person</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Person ID:&quot;</span><span class="p">,</span> <span class="n">person</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;  Name:&quot;</span><span class="p">,</span> <span class="n">person</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">person</span><span class="o">.</span><span class="n">email</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
-                <span class="k">print</span><span class="p">(</span><span class="s2">&quot;  E-mail address:&quot;</span><span class="p">,</span> <span class="n">person</span><span class="o">.</span><span class="n">email</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;  E-mail address:&quot;</span><span class="p">,</span> <span class="n">person</span><span class="o">.</span><span class="n">email</span><span class="p">)</span>
 
             <span class="k">for</span> <span class="n">phone_number</span> <span class="ow">in</span> <span class="n">person</span><span class="o">.</span><span class="n">phones</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">phone_number</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">addressbook_pb2</span><span class="o">.</span><span class="n">Person</span><span class="o">.</span><span class="n">MOBILE</span><span class="p">:</span>
-                    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;  Mobile phone #:&quot;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot; &quot;</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;  Mobile phone #:&quot;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot; &quot;</span><span class="p">)</span>
                 <span class="k">elif</span> <span class="n">phone_number</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">addressbook_pb2</span><span class="o">.</span><span class="n">Person</span><span class="o">.</span><span class="n">HOME</span><span class="p">:</span>
-                    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;  Home phone #:&quot;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot; &quot;</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;  Home phone #:&quot;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot; &quot;</span><span class="p">)</span>
                 <span class="k">elif</span> <span class="n">phone_number</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">addressbook_pb2</span><span class="o">.</span><span class="n">Person</span><span class="o">.</span><span class="n">WORK</span><span class="p">:</span>
-                    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;  Work phone #:&quot;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot; &quot;</span><span class="p">)</span>
-                <span class="k">print</span><span class="p">(</span><span class="n">phone_number</span><span class="o">.</span><span class="n">number</span><span class="p">)</span>
-</pre></div>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;  Work phone #:&quot;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot; &quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">phone_number</span><span class="o">.</span><span class="n">number</span><span class="p">)</span>
+</code></pre></div>
 
 
 <p>代码 <a href="https://github.com/jachinlin/python-demo/tree/master/protobuf_addressbook">addressbook</a></p>
@@ -204,9 +205,8 @@ pip isntall protobuf
 </ul>
 
     
-        <p class=tags>This entry was tagged
-        
-            <a href="/tags/protobuf/">protobuf</a>
+        <p class=tags>标签：
+        <a href="/tags/protobuf/">protobuf</a>
     
 
     
@@ -214,9 +214,8 @@ pip isntall protobuf
 
 
 
-
+</div>
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
-</div>
 </body>
 </html>

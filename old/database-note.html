@@ -5,6 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>数据库并发控制笔记 | 数据库并发控制笔记</title>
+    <link rel="shortcut icon" href="/favicon.ico">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous" media="screen">
     <link rel="stylesheet" href="/static/style.css" type="text/css">
     <link href="/feed.atom" rel="alternate" title=" 数据库并发控制笔记" type="application/atom+xml">
@@ -25,12 +26,12 @@
 </head>
 
 <body>
-<div class="box">
+<div class="container box">
 
 
 
-<div class="container">
-        <h1 class="title">数据库并发控制笔记</h1>
+<div>
+        <h1>数据库并发控制笔记</h1>
 
     <h2>并发现象</h2>
 <p>数据库里面对数据进行并发处理的时候，如果不进行控制可能出现的三个现象：</p>
@@ -86,8 +87,8 @@
 <p>这个级别和读已提交级别是不一样的。重复读事务中的查询看到的是事务开始时的快照， 而不是该事务内部当前查询开始时的快照，这样，同一个事务内部后面的SELECT命令总是看到同样的数据等，它们没有看到通过自身事务开始之后提及的其他事务做出的改变。</p>
 <p>使用这个级别的应用必须准备好重试事务，因为串行化失败。</p>
 <p>UPDATE, DELETE, SELECT FOR UPDATE和SELECT FOR SHARE在搜索目标行时的行为和SELECT一样： 它们将只寻找在事务开始的时候已经提交的目标行。但是， 这样的目标行在被发现的时候可能已经被另外一个并发的事务更新、删除、锁住。在这种情况下， 可串行化的事务将等待第一个正在更新的事务提交或者回滚(如果它仍然在处理中)。如果第一个事务回滚， 那么它的影响将被忽略，而这个可串行化的就可以继续更新它最初发现的行。 但是如果第一个事务被提交了(并且实际上更新或者删除了该行，而不只是锁住它)那么可串行化事务将回滚， 并返回下面信息：</p>
-<div class="codehilite"><pre><span></span><span class="n">ERROR</span><span class="o">:</span>  <span class="n">could</span> <span class="n">not</span> <span class="n">serialize</span> <span class="n">access</span> <span class="n">due</span> <span class="n">to</span> <span class="n">concurrent</span> <span class="n">update</span>
-</pre></div>
+<div class="codehilite"><pre><span></span><code><span class="n">ERROR</span><span class="o">:</span>  <span class="n">could</span> <span class="n">not</span> <span class="n">serialize</span> <span class="n">access</span> <span class="n">due</span> <span class="n">to</span> <span class="n">concurrent</span> <span class="n">update</span>
+</code></pre></div>
 
 
 <p>因为一个可串行化的事务在开始之后不能更改或者锁住被其它事务更改过的行。</p>
@@ -101,9 +102,8 @@
 </ul>
 
     
-        <p class=tags>This entry was tagged
-        
-            <a href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/">数据库</a>
+        <p class=tags>标签：
+        <a href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/">数据库</a>
     
 
     
@@ -111,9 +111,8 @@
 
 
 
-
+</div>
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
-</div>
 </body>
 </html>

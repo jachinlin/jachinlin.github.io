@@ -5,6 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>Blog | 一叶知秋</title>
+    <link rel="shortcut icon" href="/favicon.ico">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous" media="screen">
     <link rel="stylesheet" href="/static/style.css" type="text/css">
     <link href="/feed.atom" rel="alternate" title=" 一叶知秋" type="application/atom+xml">
@@ -23,10 +24,10 @@
 </head>
 
 <body>
-<div class="box">
+<div class="container box">
 
-<div class="container">
-    <nav class="navbar navbar-expand-lg navbar-light py-3" aria-label="Main navigation">
+<div>
+    <nav class="navbar navbar-expand-lg navbar-light" aria-label="Main navigation">
         <a class="navbar-brand" href="/">一叶知秋</a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
@@ -34,10 +35,19 @@
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav align-items-lg-center text-uppercase pt-3 pt-lg-0 ml-auto">
                 <li class="nav-item "><a class="nav-link" href="/">首页</a></li>
-                <li class="nav-item"><a class="nav-link" href="/tags">标签</a></li>
+                <li class="nav-item"><a class="nav-link" href="/tags/">标签</a></li>
                 
                 <li class="nav-item">
-                    <a class="nav-link" href="/about">关于</a>
+                    <a class="nav-link" href="/about.html">关于</a>
+                </li>
+                
+                
+                <li class="nav-item">
+                    <a class="nav-link" href="/geektime_dl">极客时间</a>
+                </li>
+                
+                <li class="nav-item">
+                    <a class="nav-link" href="/leetcode">每日一题</a>
                 </li>
                 
             </ul>
@@ -47,13 +57,13 @@
 
 
 
-<div class="container home-body">
+<div class="home-body">
     <div class="entry-wrapper">
         
         <div class="row entry-overview">
-            <div class="col-sm-4 col-3 date">2019年8月20日</div>
-            <div class="col-sm-8 col-9 detail">
-                <a href="/2019/8/protobuf-basic">Protocol Buffer 基础</a>
+            <div class="col-sm-3 col-2 date">2019年8月20日</div>
+            <div class="col-sm-8 col-10 detail">
+                <a href="/2019/8/protobuf-basic.html">Protocol Buffer 基础</a>
                 
                 <span class="summary"> —— protobuf 是 Google 开发的一套语言无关、平台无关、可扩展的、轻便高效的序列化和反序列化实现，这篇文章简单介绍 protobuf, 并使用 protobuf 实现一个简单的通讯录应用。</span>
                 
@@ -61,25 +71,25 @@
         </div>
         
         <div class="row entry-overview">
-            <div class="col-sm-4 col-3 date">2018年7月20日</div>
-            <div class="col-sm-8 col-9 detail">
-                <a href="/old/token-bucket">令牌桶算法</a>
+            <div class="col-sm-3 col-2 date">2018年7月20日</div>
+            <div class="col-sm-8 col-10 detail">
+                <a href="/old/token-bucket.html">令牌桶算法</a>
                 
             </div>
         </div>
         
         <div class="row entry-overview">
-            <div class="col-sm-4 col-3 date">2018年6月20日</div>
-            <div class="col-sm-8 col-9 detail">
-                <a href="/old/yangbo-micro-service-20-note">《微服务架构核心20讲》笔记</a>
+            <div class="col-sm-3 col-2 date">2018年6月20日</div>
+            <div class="col-sm-8 col-10 detail">
+                <a href="/old/yangbo-micro-service-20-note.html">《微服务架构核心20讲》笔记</a>
                 
             </div>
         </div>
         
         <div class="row entry-overview">
-            <div class="col-sm-4 col-3 date">2018年6月14日</div>
-            <div class="col-sm-8 col-9 detail">
-                <a href="/old/learning-go">学习 Go 语言</a>
+            <div class="col-sm-3 col-2 date">2018年6月14日</div>
+            <div class="col-sm-8 col-10 detail">
+                <a href="/old/learning-go.html">学习 Go 语言</a>
                 
                 <span class="summary"> —— Go 学习资料集锦</span>
                 
@@ -87,49 +97,49 @@
         </div>
         
         <div class="row entry-overview">
-            <div class="col-sm-4 col-3 date">2018年6月6日</div>
-            <div class="col-sm-8 col-9 detail">
-                <a href="/old/vuejs-intro">Vue 入门</a>
+            <div class="col-sm-3 col-2 date">2018年6月6日</div>
+            <div class="col-sm-8 col-10 detail">
+                <a href="/old/vuejs-intro.html">Vue 入门</a>
                 
             </div>
         </div>
         
         <div class="row entry-overview">
-            <div class="col-sm-4 col-3 date">2017年10月3日</div>
-            <div class="col-sm-8 col-9 detail">
-                <a href="/old/redis-zset">Reids 有序集合的实现原理</a>
+            <div class="col-sm-3 col-2 date">2017年10月3日</div>
+            <div class="col-sm-8 col-10 detail">
+                <a href="/old/redis-zset.html">Reids 有序集合的实现原理</a>
                 
             </div>
         </div>
         
         <div class="row entry-overview">
-            <div class="col-sm-4 col-3 date">2017年10月1日</div>
-            <div class="col-sm-8 col-9 detail">
-                <a href="/old/database-note">数据库并发控制笔记</a>
+            <div class="col-sm-3 col-2 date">2017年10月1日</div>
+            <div class="col-sm-8 col-10 detail">
+                <a href="/old/database-note.html">数据库并发控制笔记</a>
                 
             </div>
         </div>
         
         <div class="row entry-overview">
-            <div class="col-sm-4 col-3 date">2017年9月12日</div>
-            <div class="col-sm-8 col-9 detail">
-                <a href="/old/werkzeug-routing">werkzeug —— URL Routing</a>
+            <div class="col-sm-3 col-2 date">2017年9月12日</div>
+            <div class="col-sm-8 col-10 detail">
+                <a href="/old/werkzeug-routing.html">werkzeug —— URL Routing</a>
                 
             </div>
         </div>
         
         <div class="row entry-overview">
-            <div class="col-sm-4 col-3 date">2017年9月10日</div>
-            <div class="col-sm-8 col-9 detail">
-                <a href="/old/werkzeug-locals">werkzeug —— Context Locals</a>
+            <div class="col-sm-3 col-2 date">2017年9月10日</div>
+            <div class="col-sm-8 col-10 detail">
+                <a href="/old/werkzeug-locals.html">werkzeug —— Context Locals</a>
                 
             </div>
         </div>
         
         <div class="row entry-overview">
-            <div class="col-sm-4 col-3 date">2017年8月23日</div>
-            <div class="col-sm-8 col-9 detail">
-                <a href="/old/how-the-heck-does-async-await-work-in-Python-3.5">【译】async/await 到底是怎么工作的呢？</a>
+            <div class="col-sm-3 col-2 date">2017年8月23日</div>
+            <div class="col-sm-8 col-10 detail">
+                <a href="/old/how-the-heck-does-async-await-work-in-Python-3.5.html">【译】async/await 到底是怎么工作的呢？</a>
                 
             </div>
         </div>
@@ -137,8 +147,8 @@
     </div>
     
 
-    <div class="row pagination">
-    <div class="col-sm-12 col-12">
+    <div class="mypagination">
+    <div>
         
         <span class=disabled>&laquo; Previous</span>
         
@@ -153,25 +163,24 @@
 
 
 
-<div class="container footer">
-    <p>&copy; Copyright 2019 by janxylin.</p>
+<div class="footer">
+    <p>&copy; Copyright 2020 by <a href="http://github.com/jachinlin">Jachin Lin</a>.</p>
     <p>
         Contact me via
         
-        <a href="mailto:linjx1000@gmail.com">mail</a> or
+        <a href="mailto:linjx1000+github@gmail.com">mail</a> or
         
         
         <a href="http://github.com/jachinlin">github</a>
         
     </p>
     <p>
-        Subscribe <a href="/feed.atom" rel="alternate" title="一叶知秋">to Atom feed</a>
+        Subscribe to <a href="/feed.atom" rel="alternate" title="None"> Atom feed</a>
     </p>
 </div>
 
-
+</div>
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
-</div>
 </body>
 </html>

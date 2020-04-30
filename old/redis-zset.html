@@ -5,6 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>Reids 有序集合的实现原理 | Reids 有序集合的实现原理</title>
+    <link rel="shortcut icon" href="/favicon.ico">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous" media="screen">
     <link rel="stylesheet" href="/static/style.css" type="text/css">
     <link href="/feed.atom" rel="alternate" title=" Reids 有序集合的实现原理" type="application/atom+xml">
@@ -25,12 +26,12 @@
 </head>
 
 <body>
-<div class="box">
+<div class="container box">
 
 
 
-<div class="container">
-        <h1 class="title">Reids 有序集合的实现原理</h1>
+<div>
+        <h1>Reids 有序集合的实现原理</h1>
 
     <p>Redis有序集合的底层实现有两种方式：</p>
 <ul>
@@ -80,7 +81,7 @@
 <p>obj：节点成员对象。</p>
 </li>
 </ol>
-<div class="codehilite"><pre><span></span><span class="cm">/* part of server.h */</span>
+<div class="codehilite"><pre><span></span><code><span class="cm">/* part of server.h */</span>
 <span class="k">typedef</span> <span class="k">struct</span> <span class="n">zskiplistNode</span> <span class="p">{</span>
     <span class="n">sds</span> <span class="n">ele</span><span class="p">;</span>
     <span class="kt">double</span> <span class="n">score</span><span class="p">;</span>
@@ -96,11 +97,11 @@
     <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">length</span><span class="p">;</span>
     <span class="kt">int</span> <span class="n">level</span><span class="p">;</span>
 <span class="p">}</span> <span class="n">zskiplist</span><span class="p">;</span>
-</pre></div>
+</code></pre></div>
 
 
 <p>Redis中的zskiplist实现了<code>zslCreate</code>，<code>zslFree</code>，<code>zslInsert</code>，<code>zslDelete</code>等API 。这里就只看下zslInsert的实现，源码放在<code>t_zset.c</code>：</p>
-<div class="codehilite"><pre><span></span><span class="cm">/* Insert a new node in the skiplist. Assumes the element does not already</span>
+<div class="codehilite"><pre><span></span><code><span class="cm">/* Insert a new node in the skiplist. Assumes the element does not already</span>
 <span class="cm"> * exist (up to the caller to enforce that). The skiplist takes ownership</span>
 <span class="cm"> * of the passed SDS string &#39;ele&#39;. */</span>
 <span class="n">zskiplistNode</span> <span class="o">*</span><span class="nf">zslInsert</span><span class="p">(</span><span class="n">zskiplist</span> <span class="o">*</span><span class="n">zsl</span><span class="p">,</span> <span class="kt">double</span> <span class="n">score</span><span class="p">,</span> <span class="n">sds</span> <span class="n">ele</span><span class="p">)</span> <span class="p">{</span>
@@ -159,16 +160,16 @@
     <span class="n">zsl</span><span class="o">-&gt;</span><span class="n">length</span><span class="o">++</span><span class="p">;</span>
     <span class="k">return</span> <span class="n">x</span><span class="p">;</span>
 <span class="p">}</span>
-</pre></div>
+</code></pre></div>
 
 
 <h3>有序集合对象</h3>
 <p>Redis有序集合的跳跃表实现使用<code>zset</code>结构作为底层实现，一个zset结构除了包含一个跳跃表结构，还包含一个字典结构。为了让有序集合的查找和范围型操作都尽可能快的执行，Redis选择了同时使用跳跃表和字典两种数据结构。</p>
-<div class="codehilite"><pre><span></span><span class="k">typedef</span> <span class="k">struct</span> <span class="n">zset</span> <span class="p">{</span>
+<div class="codehilite"><pre><span></span><code><span class="k">typedef</span> <span class="k">struct</span> <span class="n">zset</span> <span class="p">{</span>
     <span class="n">dict</span> <span class="o">*</span><span class="n">dict</span><span class="p">;</span>
     <span class="n">zskiplist</span> <span class="o">*</span><span class="n">zsl</span><span class="p">;</span>
 <span class="p">}</span> <span class="n">zset</span><span class="p">;</span>
-</pre></div>
+</code></pre></div>
 
 
 <p>zset结构中的 zsl 跳跃表按分值从小到大保存了所有集合元素，每个跳跃表节点保存了一个集合元素：obj属性保存元素成员，score属性保存了元素分值。通过这个跳跃表，我们可以对有序集合进行范围型操作，比如<code>ZRANK</code>、<code>ZRANGE</code>等命令就是基于跳跃表API来实现的。</p>
@@ -176,9 +177,8 @@
 <p>本文主要参考<a href="https://book.douban.com/subject/25900156/">Redis设计与实现</a></p>
 
     
-        <p class=tags>This entry was tagged
-        
-            <a href="/tags/Redis/">Redis</a>
+        <p class=tags>标签：
+        <a href="/tags/Redis/">Redis</a>
     
 
     
@@ -186,9 +186,8 @@
 
 
 
-
+</div>
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
-</div>
 </body>
 </html>

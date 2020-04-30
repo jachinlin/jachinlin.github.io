@@ -5,6 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>实现一个简易的 wsgi 服务器 | 实现一个简易的 wsgi 服务器</title>
+    <link rel="shortcut icon" href="/favicon.ico">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous" media="screen">
     <link rel="stylesheet" href="/static/style.css" type="text/css">
     <link href="/feed.atom" rel="alternate" title=" 实现一个简易的 wsgi 服务器" type="application/atom+xml">
@@ -25,12 +26,12 @@
 </head>
 
 <body>
-<div class="box">
+<div class="container box">
 
 
 
-<div class="container">
-        <h1 class="title">实现一个简易的 wsgi 服务器</h1>
+<div>
+        <h1>实现一个简易的 wsgi 服务器</h1>
 
     <p><a href="/old/wsgi-intro//">上文</a>我们介绍了WSGI协议，本文，我们则亲自造一轮字：实现一个<code>wsgi server</code>。我们在模块<code>simple_wsgi</code>实现全部功能，主要包括：</p>
 <ul>
@@ -71,7 +72,7 @@
 <p>​</p>
 <p>接下来，我们来看看每个方法是怎么实现的。</p>
 <h4>__init__</h4>
-<div class="codehilite"><pre><span></span><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">server_address</span><span class="p">):</span>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">server_address</span><span class="p">):</span>
     <span class="c1"># 创建监听套接字</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">listen_socket</span> <span class="o">=</span> <span class="n">listen_socket</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span>
         <span class="n">socket</span><span class="o">.</span><span class="n">AF_INET</span><span class="p">,</span>
@@ -90,39 +91,39 @@
     <span class="c1"># 响应头部信息</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">headers_set</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="c1"># 其它实例属性</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">application</span> <span class="o">=</span> <span class="bp">None</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">client_connection</span> <span class="o">=</span> <span class="bp">None</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">request_data</span> <span class="o">=</span> <span class="bp">None</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">request_method</span> <span class="o">=</span> <span class="bp">None</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="bp">None</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">request_version</span> <span class="o">=</span> <span class="bp">None</span>
-</pre></div>
+    <span class="bp">self</span><span class="o">.</span><span class="n">application</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">client_connection</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">request_data</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">request_method</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">request_version</span> <span class="o">=</span> <span class="kc">None</span>
+</code></pre></div>
 
 
 <h4>set_app</h4>
-<div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">set_app</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">application</span><span class="p">):</span>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">set_app</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">application</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    设置web应用</span>
 <span class="sd">    :param application:</span>
 <span class="sd">    :return:</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">application</span> <span class="o">=</span> <span class="n">application</span>
-</pre></div>
+</code></pre></div>
 
 
 <h4>serve_forever</h4>
-<div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">serve_forever</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">serve_forever</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
     <span class="n">listen_socket</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">listen_socket</span>
-    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
         <span class="c1"># 连接套接字</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">client_connection</span><span class="p">,</span> <span class="n">client_address</span> <span class="o">=</span> <span class="n">listen_socket</span><span class="o">.</span><span class="n">accept</span><span class="p">()</span>
         <span class="c1"># 处理请求</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_handle_one_request</span><span class="p">()</span>
-</pre></div>
+</code></pre></div>
 
 
 <h4>_parse_request</h4>
-<div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">_parse_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">_parse_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    解析请求行</span>
 <span class="sd">    :param text: http请求报文</span>
@@ -136,11 +137,11 @@
      <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span>
      <span class="bp">self</span><span class="o">.</span><span class="n">request_version</span>
      <span class="p">)</span> <span class="o">=</span> <span class="n">request_line</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
-</pre></div>
+</code></pre></div>
 
 
 <h4>_get_environ</h4>
-<div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">_get_environ</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">_get_environ</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    构建 environ</span>
 <span class="sd">    :return:</span>
@@ -151,31 +152,31 @@
     <span class="n">env</span><span class="p">[</span><span class="s1">&#39;wsgi.url_scheme&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;http&#39;</span>
     <span class="n">env</span><span class="p">[</span><span class="s1">&#39;wsgi.input&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">StringIO</span><span class="o">.</span><span class="n">StringIO</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">request_data</span><span class="p">)</span>
     <span class="n">env</span><span class="p">[</span><span class="s1">&#39;wsgi.errors&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span>
-    <span class="n">env</span><span class="p">[</span><span class="s1">&#39;wsgi.multithread&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">False</span>
-    <span class="n">env</span><span class="p">[</span><span class="s1">&#39;wsgi.multiprocess&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">False</span>
-    <span class="n">env</span><span class="p">[</span><span class="s1">&#39;wsgi.run_once&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">env</span><span class="p">[</span><span class="s1">&#39;wsgi.multithread&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">env</span><span class="p">[</span><span class="s1">&#39;wsgi.multiprocess&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">env</span><span class="p">[</span><span class="s1">&#39;wsgi.run_once&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="c1"># CGI 变量</span>
     <span class="n">env</span><span class="p">[</span><span class="s1">&#39;REQUEST_METHOD&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request_method</span>
     <span class="n">env</span><span class="p">[</span><span class="s1">&#39;PATH_INFO&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span>
     <span class="n">env</span><span class="p">[</span><span class="s1">&#39;SERVER_NAME&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">server_name</span>
     <span class="n">env</span><span class="p">[</span><span class="s1">&#39;SERVER_PORT&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">server_port</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">env</span>
-</pre></div>
+</code></pre></div>
 
 
 <h4>_start_response</h4>
-<div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">_start_response</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">status</span><span class="p">,</span> <span class="n">response_headers</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">_start_response</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">status</span><span class="p">,</span> <span class="n">response_headers</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="c1"># 添加必要的服务器头部信息</span>
     <span class="n">server_headers</span> <span class="o">=</span> <span class="p">[</span>
         <span class="p">(</span><span class="s1">&#39;Date&#39;</span><span class="p">,</span> <span class="s1">&#39;Tue, 31 Mar 2015 12:54:48 GMT&#39;</span><span class="p">),</span>
         <span class="p">(</span><span class="s1">&#39;Server&#39;</span><span class="p">,</span> <span class="s1">&#39;WSGIServer 0.2&#39;</span><span class="p">),</span>
     <span class="p">]</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">headers_set</span> <span class="o">=</span> <span class="p">[</span><span class="n">status</span><span class="p">,</span> <span class="n">response_headers</span> <span class="o">+</span> <span class="n">server_headers</span><span class="p">]</span>
-</pre></div>
+</code></pre></div>
 
 
 <h4>_handle_one_request</h4>
-<div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">_handle_one_request</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">_handle_one_request</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    处理请求</span>
 <span class="sd">    :return:</span>
@@ -192,16 +193,16 @@
 
     <span class="c1"># 构建响应报文</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_finish_response</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
-</pre></div>
+</code></pre></div>
 
 
 <h4>_finish_response</h4>
-<div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">_finish_response</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">_finish_response</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">status</span><span class="p">,</span> <span class="n">response_headers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">headers_set</span>
-        <span class="n">response</span> <span class="o">=</span> <span class="s1">&#39;HTTP/1.1 {status}</span><span class="se">\r\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">status</span><span class="o">=</span><span class="n">status</span><span class="p">)</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="s1">&#39;HTTP/1.1 </span><span class="si">{status}</span><span class="se">\r\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">status</span><span class="o">=</span><span class="n">status</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">header</span> <span class="ow">in</span> <span class="n">response_headers</span><span class="p">:</span>
-            <span class="n">response</span> <span class="o">+=</span> <span class="s1">&#39;{0}: {1}</span><span class="se">\r\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">*</span><span class="n">header</span><span class="p">)</span>
+            <span class="n">response</span> <span class="o">+=</span> <span class="s1">&#39;</span><span class="si">{0}</span><span class="s1">: </span><span class="si">{1}</span><span class="se">\r\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">*</span><span class="n">header</span><span class="p">)</span>
         <span class="n">response</span> <span class="o">+=</span> <span class="s1">&#39;</span><span class="se">\r\n</span><span class="s1">&#39;</span>
         <span class="k">for</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">result</span><span class="p">:</span>
             <span class="n">response</span> <span class="o">+=</span> <span class="n">data</span>
@@ -209,21 +210,21 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">client_connection</span><span class="o">.</span><span class="n">sendall</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
     <span class="k">finally</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">client_connection</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-</pre></div>
+</code></pre></div>
 
 
 <h3>make_server</h3>
 <p><code>make_server</code>比较简单，接受一个端点地址和webapplication，返回一个server对象。</p>
-<div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">make_server</span><span class="p">(</span><span class="n">server_address</span><span class="p">,</span> <span class="n">application</span><span class="p">):</span>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">make_server</span><span class="p">(</span><span class="n">server_address</span><span class="p">,</span> <span class="n">application</span><span class="p">):</span>
     <span class="n">server</span> <span class="o">=</span> <span class="n">WSGIServer</span><span class="p">(</span><span class="n">server_address</span><span class="p">)</span>
     <span class="n">server</span><span class="o">.</span><span class="n">set_app</span><span class="p">(</span><span class="n">application</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">server</span>
-</pre></div>
+</code></pre></div>
 
 
 <h3>使用</h3>
 <p>现在，我们使用刚才完成的<code>simple_wsgi</code>和<code>flask</code>   来开发一个网络应用。代码如下：</p>
-<div class="codehilite"><pre><span></span><span class="c1"># app.py</span>
+<div class="codehilite"><pre><span></span><code><span class="c1"># app.py</span>
 <span class="c1"># coding=utf-8</span>
 
 <span class="kn">from</span> <span class="nn">simple_wsgi</span> <span class="kn">import</span> <span class="n">make_server</span><span class="p">,</span> <span class="n">SERVER_ADDRESS</span>
@@ -231,18 +232,18 @@
 
 <span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
-<span class="nd">@app.route</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;GET&#39;</span><span class="p">,</span> <span class="s1">&#39;POST&#39;</span><span class="p">])</span>
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;GET&#39;</span><span class="p">,</span> <span class="s1">&#39;POST&#39;</span><span class="p">])</span>
 <span class="k">def</span> <span class="nf">home</span><span class="p">():</span>
     <span class="k">return</span> <span class="s1">&#39;&lt;h1&gt;Home&lt;/h1&gt;&#39;</span>
 
-<span class="nd">@app.route</span><span class="p">(</span><span class="s1">&#39;/user/&lt;name&gt;&#39;</span><span class="p">)</span>
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/user/&lt;name&gt;&#39;</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">user</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
     <span class="k">return</span> <span class="s1">&#39;&lt;h1&gt;Hello, </span><span class="si">%s</span><span class="s1">!&lt;/h1&gt;&#39;</span> <span class="o">%</span> <span class="n">name</span>
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
     <span class="n">httpd</span> <span class="o">=</span> <span class="n">make_server</span><span class="p">(</span><span class="n">SERVER_ADDRESS</span><span class="p">,</span> <span class="n">app</span><span class="p">)</span>
     <span class="n">httpd</span><span class="o">.</span><span class="n">serve_forever</span><span class="p">()</span>
-</pre></div>
+</code></pre></div>
 
 
 <p>这是效果：</p>
@@ -252,9 +253,8 @@
 <p>本文涉及到的代码都放在<a href="https://github.com/jachinlin/simple_wsgi_server">这个仓库</a>。这个仓库还提供了一个简易的多线程并发版本。</p>
 
     
-        <p class=tags>This entry was tagged
-        
-            <a href="/tags/socket/">socket</a>
+        <p class=tags>标签：
+        <a href="/tags/socket/">socket</a>
     
 
     
@@ -262,9 +262,8 @@
 
 
 
-
+</div>
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
-</div>
 </body>
 </html>

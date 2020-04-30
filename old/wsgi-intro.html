@@ -5,6 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>WSGI 初探 | WSGI 初探</title>
+    <link rel="shortcut icon" href="/favicon.ico">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous" media="screen">
     <link rel="stylesheet" href="/static/style.css" type="text/css">
     <link href="/feed.atom" rel="alternate" title=" WSGI 初探" type="application/atom+xml">
@@ -25,12 +26,12 @@
 </head>
 
 <body>
-<div class="box">
+<div class="container box">
 
 
 
-<div class="container">
-        <h1 class="title">WSGI 初探</h1>
+<div>
+        <h1>WSGI 初探</h1>
 
     <p>web服务器需要接收HTTP请求、解析HTTP请求以及发送HTTP响应，处理这些底层操作是十分耗时的，且容易出错。为了提高web服务的开发效率，人们定义了一个接口——<code>WSGI</code> (Web Server Gateway Interfere)——将web服务器分成了两部分：</p>
 <ul>
@@ -58,19 +59,19 @@
 </ol>
 <p>而不用关心处理TCP连接等底层代码。</p>
 <p>下面就是一个极简application：</p>
-<div class="codehilite"><pre><span></span><span class="c1"># client.py</span>
+<div class="codehilite"><pre><span></span><code><span class="c1"># client.py</span>
 <span class="k">def</span> <span class="nf">application</span><span class="p">(</span><span class="n">environ</span><span class="p">,</span> <span class="n">start_response</span><span class="p">):</span>
   <span class="c1"># parse the environ</span>
   <span class="n">start_response</span><span class="p">(</span><span class="s1">&#39;200 OK&#39;</span><span class="p">,</span> <span class="p">[(</span><span class="s1">&#39;Content-Type&#39;</span><span class="p">,</span> <span class="s1">&#39;text/html&#39;</span><span class="p">)])</span>
   <span class="k">return</span> <span class="p">[</span><span class="s1">&#39;&lt;h1&gt;Hello Web!&lt;/h1&gt;&#39;</span><span class="p">]</span>
-</pre></div>
+</code></pre></div>
 
 
 <p>其实，<code>application</code>也可以是类、实现了<code>__call__</code>方法的类实例等可调用对象。在大多数web框架中，<code>application</code>是通过类实例表示的。</p>
 <h3>wsgi server</h3>
 <p>wsgi server 则负责提供environ和start_response参数，并调用application；以及实现处理TCP连接、处理HTTP原始请求、发送HTTP响应等底层逻辑。</p>
 <p>常用的 wsgi server 有<code>Gunicorn</code> 和 <code>Tornado</code>。Python的 <code>wsgiref</code> 模块也内置了一个 wsgi server ，该服务器完全符合 WSGI 协议，但性能低下，只能用于开发和测试。下面，我们就 wsgiref 模块来看 wsgi server 是如何加载 application 的：</p>
-<div class="codehilite"><pre><span></span><span class="c1"># server.py</span>
+<div class="codehilite"><pre><span></span><code><span class="c1"># server.py</span>
 <span class="kn">from</span> <span class="nn">wsgiref.simple_server</span> <span class="kn">import</span> <span class="n">make_server</span>
 <span class="kn">from</span> <span class="nn">client</span> <span class="kn">import</span> <span class="n">application</span>
 
@@ -78,15 +79,14 @@
 <span class="n">httpd</span> <span class="o">=</span> <span class="n">make_server</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="mi">8000</span><span class="p">,</span> <span class="n">application</span><span class="p">)</span>
 <span class="c1"># 开始监听HTTP请求:</span>
 <span class="n">httpd</span><span class="o">.</span><span class="n">serve_forever</span><span class="p">()</span>
-</pre></div>
+</code></pre></div>
 
 
 <p>一个简单的web服务就这么生成了。启动程序，在浏览器地址栏输入<code>http://localhost:8000/</code>就能看到咱们的劳动成果了。</p>
 
     
-        <p class=tags>This entry was tagged
-        
-            <a href="/tags/wsgi/">wsgi</a>
+        <p class=tags>标签：
+        <a href="/tags/wsgi/">wsgi</a>
     
 
     
@@ -94,9 +94,8 @@
 
 
 
-
+</div>
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
-</div>
 </body>
 </html>

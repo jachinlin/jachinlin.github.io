@@ -4,6 +4,33 @@
 body {
     font-family: "lucida grande", "lucida sans unicode", lucida, helvetica, "Hiragino Sans GB", "Microsoft YaHei", "WenQuanYi Micro Hei", sans-serif;
     font-size: 18px;
+    background-color: #ececec;
+}
+
+/* headlines */
+h1, h2, h3, h4, h5, h6 {
+    font-family: "Palatino Linotype", "Book Antiqua", Palatino, Helvetica, STKaiti, SimSun, serif;
+    color: #2771b5;
+}
+
+
+h1 {
+    margin: 50px 0 35px 0;
+    border-bottom: 1px LightGrey solid;
+}
+
+h2 {
+    margin-bottom: 40px;
+    padding: 5px;
+    width: 98%;
+    line-height: 150%;
+}
+
+h3 {
+    margin-top: 40px;
+    margin-bottom: 30px;
+    width: 98%;
+    line-height: 150%;
 }
 
 a {
@@ -16,88 +43,42 @@ a:hover {
 
 img {
     display: block;
-    box-shadow: 0 0 .5rem #555;
+    box-shadow: 0 0 8px #555;
     border-radius: 6px;
-    margin: 1.5rem auto 1.6rem auto;
+    margin: 24px auto 25px auto;
     max-width: 90%;
     height: auto;
     vertical-align: middle;
-    -webkit-box-shadow: 0 0 .5rem #555;
-}
-
-/* headlines */
-h1, h2, h3, h4, h5, h6 {
-    font-family: "Palatino Linotype", "Book Antiqua", Palatino, Helvetica, STKaiti, SimSun, serif;
-    color: #2771b5;
-}
-
-h1 a, h2 a, h3 a, h4 a,
-h5 a, h6 a {
-    text-decoration: none;
-}
-
-h1 a:hover, h2 a:hover,
-h3 a:hover, h4 a:hover {
-    text-decoration: underline;
-}
-
-h1 {
-    margin: 3.3rem 0 2.2rem 0;
-    font-size: 1.7rem;
-    width: 98%;
-    line-height: 150%;
-}
-
-h2 {
-    margin: 2.2rem 0 1.7rem 0;
-    font-size: 1.4rem;
-    width: 98%;
-    line-height: 150%;
-}
-
-h3 {
-    margin: 2.2rem 0 1.7rem 0;
-    font-size: 1.3rem;
-    width: 98%;
-    line-height: 150%;
-}
-
-/* code formatting */
-pre, code, tt {
-    font-family: Inconsolata, Consolas, "DEJA VU SANS MONO", "DROID SANS MONO", Proggy, monospace;
-    font-size: 90%;
 }
 
 pre {
+    font-family: Inconsolata, Consolas, "DEJA VU SANS MONO", "DROID SANS MONO", Proggy, monospace;
+    font-size: 80%;
+    background-color: #FAFAFA;
+    border: 1px solid #E0E0E0;
+    border-radius: 4px;
+    padding: 12px;
+    line-height: 1.5;
     display: block;
-    padding: .5rem;
-    line-height: 1.4;
-    border-radius: .33rem;
-    margin: 1.5rem 0 1.6rem 0;
-    height: auto;
-    vertical-align: middle;
-    background-color: #F4F4F4;
-    border: .06rem solid #E0E0E0;
-    max-width: 95%;
+    width: 100%;
+    overflow: auto;
 }
 
-code, tt {
-    padding: .1rem .2rem;
-    background-color: #f9f2f4;
-    border-radius: .2rem;
-    color: #c7254e;
+code {
+    font-family: Inconsolata, Consolas, "DEJA VU SANS MONO", "DROID SANS MONO", Proggy, monospace;
 }
 
 blockquote {
-    border-left: .27rem lightgrey solid;
-    padding-left: .5rem;
-    margin-left: .6rem;
+    border-left: 5px lightgrey solid;
+    padding-left: 15px;
+    margin-left: 20px;
     background: #f4f4f4;
 }
 
+
 /* navbar */
 .navbar-light .navbar-brand {
-    font-size: 1.67rem;
+    font-size: 27px;
     color: #398ad5;
 }
 .navbar-light .navbar-brand:hover {
@@ -105,7 +86,7 @@ blockquote {
 }
 
 .navbar-light .navbar-nav .nav-link  {
-    font-size: 1.28rem;
+    font-size: 21px;
     color: #398ad5;
 }
 
@@ -113,16 +94,23 @@ blockquote {
     color: #2771b5;
 }
 
+.navbar-light .navbar-toggler {
+    border-color: #2771b57a;
+}
 /* body */
 div.box {
     max-width: 880px;
-    margin: 3% auto;
+    margin: 1% auto;
+    border: 1px solid #DDD;
+    box-shadow: 0 0 2px #DDD;
+    background-color: #ffffff;
+    padding: 2% 4%;
 }
 
 /* footer */
 div.footer {
-    padding: 2.5rem ;
-    font-size: .89rem;
+    padding: 40px;
+    font-size: 14px;
     text-align: right;
     color: #7b8894;
 }
@@ -133,45 +121,48 @@ div.footer p {
 
 div.footer a {
     color: #7b8894;
+    text-decoration: underline;
 }
 
 
 /* blog overview */
 div.home-body {
-
+     margin: 1% 5%;
 }
 
-div.entry-overview {
-    margin: 1.4rem 0 1.4rem 0;
+
+.entry-overview {
+    margin-bottom: 25px;
 }
 
-div.entry-overview div.date {
+div.entry-overview .date {
     color: #7b8894;
     text-align: right;
-    padding: .3rem 0 .3rem 0;
-    font-size: .78rem;
+    padding: 5px 0;
+    font-size: 10px;
 }
 
 div.entry-overview a {
     font-family: "Palatino Linotype", "Book Antiqua", Palatino, Helvetica, STKaiti, SimSun, serif;
     line-height: 140%;
-    font-size: 1.3rem;
+    font-size: 20px;
     color: #2771b5;
 }
 
 div.entry-overview span.summary {
     line-height: 140%;
-    font-size: .95rem;
+    font-size: 15px;
     color: #394856;
 }
 
 /* pagination */
-div.pagination {
-    margin: 2rem 0 0 0;
+div.mypagination {
+    margin: 30px 0 0 0;
     text-align: center;
+    color: #394856;
 }
 
-div.pagination strong {
+div.my-pagination strong {
     font-style: italic;
 }
 

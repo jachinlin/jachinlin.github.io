@@ -5,6 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>Odoo Routing | Odoo Routing</title>
+    <link rel="shortcut icon" href="/favicon.ico">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous" media="screen">
     <link rel="stylesheet" href="/static/style.css" type="text/css">
     <link href="/feed.atom" rel="alternate" title=" Odoo Routing" type="application/atom+xml">
@@ -25,12 +26,12 @@
 </head>
 
 <body>
-<div class="box">
+<div class="container box">
 
 
 
-<div class="container">
-        <h1 class="title">Odoo Routing</h1>
+<div>
+        <h1>Odoo Routing</h1>
 
     <p>前置知识：</p>
 <ul>
@@ -42,17 +43,17 @@
 </ul>
 <p><code>Odoo</code>中所有的web请求都是由库 <a href="http://werkzeug.pocoo.org">werkzeug</a> 驱动的，<code>Odoo</code>在<code>werkzeug</code>的基础上进一步封装，隐藏了<code>werkzeug</code>的复杂性，让我们更加方便地定义路由。探索隐藏在<code>Odoo</code>带来的便利背后的工作原理将是一件有趣的体验，现在，就让我们来体验这种乐趣吧。</p>
 <p>首先，我们先看看<code>Odoo</code>是如何定义一个路由的。</p>
-<div class="codehilite"><pre><span></span><span class="c1"># controllers/main.py</span>
+<div class="codehilite"><pre><span></span><code><span class="c1"># controllers/main.py</span>
 
 <span class="kn">from</span> <span class="nn">odoo</span> <span class="kn">import</span> <span class="n">http</span>
 <span class="kn">from</span> <span class="nn">odoo.http</span> <span class="kn">import</span> <span class="n">request</span>
 
 
 <span class="k">class</span> <span class="nc">Main</span><span class="p">(</span><span class="n">http</span><span class="o">.</span><span class="n">Controller</span><span class="p">):</span>
-    <span class="nd">@http.route</span><span class="p">(</span><span class="s1">&#39;/hello&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s1">&#39;http&#39;</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="s1">&#39;none&#39;</span><span class="p">)</span>
+    <span class="nd">@http</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/hello&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s1">&#39;http&#39;</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="s1">&#39;none&#39;</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">hello</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;&lt;h1&gt;hello world!&lt;/h1&gt;&quot;</span>
-</pre></div>
+</code></pre></div>
 
 
 <p>可以看到，<code>Odoo</code>的路由实现方式和<code>Flask</code>的实现方式相似，相对于<code>werkzeug</code>简单便利多了。</p>
@@ -64,8 +65,8 @@
 <li>视图函数<code>view_func</code>由<code>odoo.http.route</code>装饰着</li>
 </ul>
 <p>我们先来看看<code>odoo.http.route</code>，为了方便讨论，我们暂时忽略<code>route</code>里边的<code>type</code>和<code>auth</code>参数。</p>
-<div class="codehilite"><pre><span></span><span class="c1"># part of odoo/http.py</span>
-<span class="k">def</span> <span class="nf">route</span><span class="p">(</span><span class="n">route</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+<div class="codehilite"><pre><span></span><code><span class="c1"># part of odoo/http.py</span>
+<span class="k">def</span> <span class="nf">route</span><span class="p">(</span><span class="n">route</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
     <span class="n">routing</span> <span class="o">=</span> <span class="n">kw</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
     <span class="k">assert</span> <span class="s1">&#39;type&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">routing</span> <span class="ow">or</span> <span class="n">routing</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;http&quot;</span><span class="p">,</span> <span class="s2">&quot;json&quot;</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">decorator</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
@@ -75,13 +76,13 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">routes</span> <span class="o">=</span> <span class="p">[</span><span class="n">route</span><span class="p">]</span>
             <span class="n">routing</span><span class="p">[</span><span class="s1">&#39;routes&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">routes</span>
-        <span class="nd">@functools.wraps</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        <span class="nd">@functools</span><span class="o">.</span><span class="n">wraps</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
         <span class="k">def</span> <span class="nf">response_wrap</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
             <span class="n">response</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">response</span><span class="p">,</span> <span class="n">Response</span><span class="p">)</span> <span class="ow">or</span> <span class="n">f</span><span class="o">.</span><span class="n">routing_type</span> <span class="o">==</span> <span class="s1">&#39;json&#39;</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">response</span>
 
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">response</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">response</span><span class="p">,</span> <span class="n">basestring</span><span class="p">):</span>
                 <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">response</span><span class="p">,</span> <span class="n">werkzeug</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">HTTPException</span><span class="p">):</span>
@@ -97,7 +98,7 @@
         <span class="n">response_wrap</span><span class="o">.</span><span class="n">original_func</span> <span class="o">=</span> <span class="n">f</span>
         <span class="k">return</span> <span class="n">response_wrap</span>
     <span class="k">return</span> <span class="n">decorator</span>
-</pre></div>
+</code></pre></div>
 
 
 <p>可以看出，<code>route</code>是个装饰器，这个装饰器主要做了两件事</p>
@@ -107,14 +108,14 @@
 </ul>
 <p>由于装饰器这个语法糖，新的视图函数和原视图函数的名字和作用都是一样的，不过新视图函数多了一个返回值自动处理过程和两个函数属性。（这里是一个很好的运用函数属性的例子，把函数当作一个名字空间。）</p>
 <p>现在，我们来看看<code>odoo.http.Controller</code></p>
-<div class="codehilite"><pre><span></span><span class="c1"># part of odoo/http.py</span>
+<div class="codehilite"><pre><span></span><code><span class="c1"># part of odoo/http.py</span>
 <span class="k">class</span> <span class="nc">Controller</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="vm">__metaclass__</span> <span class="o">=</span> <span class="n">ControllerType</span>
-</pre></div>
+    <span class="n">__metaclass__</span> <span class="o">=</span> <span class="n">ControllerType</span>
+</code></pre></div>
 
 
 <p>这个类啥都没实现，就指定了一个元类，重要的东西还是在元类里实现的。</p>
-<div class="codehilite"><pre><span></span><span class="c1"># part of odoo/http.py</span>
+<div class="codehilite"><pre><span></span><code><span class="c1"># part of odoo/http.py</span>
 
 <span class="n">controllers_per_module</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
 
@@ -138,7 +139,7 @@
         <span class="n">controllers_per_module</span><span class="p">[</span><span class="n">module</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name_class</span><span class="p">)</span>
 
  <span class="c1"># 注：这里省略了关于类继承的处理</span>
-</pre></div>
+</code></pre></div>
 
 
 <p>我们自定义的<code>controller</code>继承<code>odoo.http.Controller</code>，<code>odoo.http.Controller</code>的元类为<code>ControllerType</code>，也就是说，自定义<code>controller</code>是由<code>odoo.http.Controller</code>生成的。<code>odoo.http.Controller</code>在生成自定义<code>controller</code>后会进行一些操作</p>
@@ -154,11 +155,11 @@
 <p><img alt="controllers_per_module" src="/../img/controllers_per_module.png"></p>
 <p>至此，关于<code>odoo.http.route</code>和<code>odor.http.Controller</code>的研读已完，但我们的脚步不应停止，因为我们还没见到一点<code>werkzeug</code>的影子。目前，我们只是发现ODOO将控制器保存到<code>controllers_per_module</code>而已。</p>
 <p>在<code>http.py</code>中，我们发现 Odoo web application 分发请求时会调用<code>routing_map</code>函数。</p>
-<div class="codehilite"><pre><span></span><span class="c1"># part of odoo/http.py</span>
+<div class="codehilite"><pre><span></span><code><span class="c1"># part of odoo/http.py</span>
 
-<span class="k">def</span> <span class="nf">routing_map</span><span class="p">(</span><span class="n">modules</span><span class="p">,</span> <span class="n">nodb_only</span><span class="p">,</span> <span class="n">converters</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">routing_map</span><span class="p">(</span><span class="n">modules</span><span class="p">,</span> <span class="n">nodb_only</span><span class="p">,</span> <span class="n">converters</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="c1"># 生成 Map 实例</span>
-    <span class="n">routing_map</span> <span class="o">=</span> <span class="n">werkzeug</span><span class="o">.</span><span class="n">routing</span><span class="o">.</span><span class="n">Map</span><span class="p">(</span><span class="n">strict_slashes</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">converters</span><span class="o">=</span><span class="n">converters</span><span class="p">)</span>
+    <span class="n">routing_map</span> <span class="o">=</span> <span class="n">werkzeug</span><span class="o">.</span><span class="n">routing</span><span class="o">.</span><span class="n">Map</span><span class="p">(</span><span class="n">strict_slashes</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">converters</span><span class="o">=</span><span class="n">converters</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">module</span> <span class="ow">in</span> <span class="n">modules</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">module</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">controllers_per_module</span><span class="p">:</span>
             <span class="k">continue</span>
@@ -168,7 +169,7 @@
             <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">mv</span> <span class="ow">in</span> <span class="n">members</span><span class="p">:</span>
                 <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">mv</span><span class="p">,</span> <span class="s1">&#39;routing&#39;</span><span class="p">):</span>
                     <span class="c1"># 请求类型默认为http,权限默认为user</span>
-                    <span class="n">routing</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="s1">&#39;http&#39;</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">routes</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span>
+                    <span class="n">routing</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="s1">&#39;http&#39;</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">routes</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
                     <span class="n">routing</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">mv</span><span class="o">.</span><span class="n">routing</span><span class="p">)</span>
                     <span class="c1"># 这里是权限判断，我们暂时认为其值为`True`即可</span>
                     <span class="k">if</span> <span class="ow">not</span> <span class="n">nodb_only</span> <span class="ow">or</span> <span class="n">routing</span><span class="p">[</span><span class="s1">&#39;auth&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
@@ -183,16 +184,15 @@
     <span class="k">return</span> <span class="n">routing_map</span>
 
 <span class="c1"># 注：为了便于分析，这里同样删除了跟控制器继承相关的代码</span>
-</pre></div>
+</code></pre></div>
 
 
 <p><code>routing_map</code>这个函数是比较简单的，（说明：   第一个参数表示目标模块列表。odoo是按模块分割业务功能的，我们需要什么功能就加载什么模块，而<code>controllers_per_module</code>中存有所有模块的控制器信息，所以这里需要<code>modules</code>这个参数），就是生成一个<code>werkzeug.routing.Map</code>对象，然后遍历<code>modules</code>，从<code>controllers_per_module</code>找到响应路由信息，生成<code>werkzeug.routing.Rule</code>对象，添加到Map对象中。</p>
 <p>The end.</p>
 
     
-        <p class=tags>This entry was tagged
-        
-            <a href="/tags/Odoo/">Odoo</a>
+        <p class=tags>标签：
+        <a href="/tags/Odoo/">Odoo</a>
     
 
     
@@ -200,9 +200,8 @@
 
 
 
-
+</div>
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
-</div>
 </body>
 </html>

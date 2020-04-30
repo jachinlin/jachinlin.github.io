@@ -5,6 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>【译】async/await 到底是怎么工作的呢？ | 【译】async/await 到底是怎么工作的呢？</title>
+    <link rel="shortcut icon" href="/favicon.ico">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous" media="screen">
     <link rel="stylesheet" href="/static/style.css" type="text/css">
     <link href="/feed.atom" rel="alternate" title=" 【译】async/await 到底是怎么工作的呢？" type="application/atom+xml">
@@ -25,26 +26,26 @@
 </head>
 
 <body>
-<div class="box">
+<div class="container box">
 
 
 
-<div class="container">
-        <h1 class="title">【译】async/await 到底是怎么工作的呢？</h1>
+<div>
+        <h1>【译】async/await 到底是怎么工作的呢？</h1>
 
     <blockquote>
 <p>之前对于 async/await 总是一知半解，看了很多博客文章也不清楚其原理。偶遇<a href="https://snarky.ca/how-the-heck-does-async-await-work-in-python-3-5/">How the heck does async/await work in Python 3.5?</a>，如醍醐灌顶，豁然开朗。故翻译此文，以供学习探讨。</p>
 <p>原文：<a href="https://snarky.ca/how-the-heck-does-async-await-work-in-python-3-5/">How the heck does async/await work in Python 3.5?</a></p>
 </blockquote>
 <p>我知道 <a href="https://docs.python.org/3/whatsnew/3.3.html#pep-380"><code>yield from</code> in Python 3.3</a>和<a href="https://docs.python.org/3/library/asyncio.html#module-asyncio"><code>asyncio</code> in Python 3.4</a> 联合在一起衍生出了 <code>async</code>/<code>await</code> 这个新语法。例如，我知道：</p>
-<div class="codehilite"><pre><span></span><span class="k">yield from</span> <span class="n">iterator</span>
-</pre></div>
+<div class="codehilite"><pre><span></span><code><span class="k">yield from</span> <span class="n">iterator</span>
+</code></pre></div>
 
 
 <p>本质上等于：</p>
-<div class="codehilite"><pre><span></span><span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">iterator</span><span class="p">:</span>
+<div class="codehilite"><pre><span></span><code><span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">iterator</span><span class="p">:</span>
     <span class="k">yield</span> <span class="n">x</span>
-</pre></div>
+</code></pre></div>
 
 
 <p>我也知道<code>asyncio</code>是一个允许异步编程的事件循环框架。我知道它们各自的含义，但是当它们组装在一起衍生出<code>async/await</code>语法时，我就懵了。于是，我决定花些时间来研究 <a href="https://docs.python.org/3/whatsnew/3.5.html#whatsnew-pep-492"><code>async</code>/<code>await</code> </a>到底是怎么工作的。现在，因为我想要更好的理解<code>async/await</code>是怎么工作的，所以这篇文章会设计到一些底层的CPython技术细节。</p>
@@ -56,7 +57,7 @@
 <p>简单说，一个协程就是一个函数，但是你可以决定什么时候终止函数的执行，什么时候恢复该函数的执行。这时，你可能会说，“这听起来很像生成器generators啊”。嗯，你是对的。</p>
 <p>回到 <a href="https://docs.python.org/3/whatsnew/2.2.html">Python 2.2</a>，生成器generators是在 <a href="https://www.python.org/dev/peps/pep-0255/">PEP 255</a> 中引进来的（那时生成器叫做 generator iterators，因为它们实现了迭代器协议<a href="https://docs.python.org/3/library/stdtypes.html#iterator-types">iterator protocol</a>）。受到<a href="http://www.cs.arizona.edu/icon/">Icon语言</a>的启发，生成器可以通过一个超级简单的方式实现一个迭代器，这个迭代器不会占用很多的内存资源，但可以很快地获取下一个值（你也可以通过写一个实现了<code>__iter__()</code>和<code>__next()</code>两个魔术方法的类来实现一个迭代器，不过这样做相对来说比较费力）。</p>
 <p>在引入生成器以前，如果你要实现一个自己的<code>range()</code>函数，你可以简单地创建一个整数列表就能实现了：</p>
-<div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">eager_range</span><span class="p">(</span><span class="n">up_to</span><span class="p">):</span>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">eager_range</span><span class="p">(</span><span class="n">up_to</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;创建一个从 0 到 up_to 的整数列表，不包括 up_to&quot;&quot;&quot;</span>
     <span class="n">sequence</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">index</span> <span class="o">=</span> <span class="mi">0</span>
@@ -64,57 +65,57 @@
         <span class="n">sequence</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
         <span class="n">index</span> <span class="o">+=</span> <span class="mi">1</span>
     <span class="k">return</span> <span class="n">sequence</span>
-</pre></div>
+</code></pre></div>
 
 
 <p>但是，这样做的问题是，如果你想要一个很大的序列，比如从0到1000000之间的整数，你就需要创建一个足够大的列表来容纳这么多数，这是非常占用内存资源的。当生成器被引入到Python后，你所需要的就是一个整数大小的内存：</p>
-<div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">lazy_range</span><span class="p">(</span><span class="n">up_to</span><span class="p">):</span>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">lazy_range</span><span class="p">(</span><span class="n">up_to</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;返回一个从0到up_to(不包含)序列的生成器&quot;&quot;&quot;</span>
     <span class="n">index</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="k">while</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="n">up_to</span><span class="p">:</span>
         <span class="k">yield</span> <span class="n">index</span>
         <span class="n">index</span> <span class="o">+=</span> <span class="mi">1</span>
-</pre></div>
+</code></pre></div>
 
 
 <p>当函数遇到<code>yield</code>表达式时，它就停下来了，以后又能从停止的地方继续执行，就内存使用而言，这时非常有用的，因为它只用到一个整数的内存大小。</p>
 <p>如你所见，目前我们见到的生成器都是关于迭代器的。在 <a href="https://www.python.org/dev/peps/pep-0342/">PEP 342</a>中 ，传送一些值到一个停止的生成器这个特性终于添加到<a href="https://docs.python.org/3/whatsnew/2.5.html">Python 2.5</a>。这时候，Python就有了协程这个概念了。 PEP 342 在生成器中引入了 <code>send()</code> 方法。 这样，你不仅可以暂停一个生成器，还可以在它暂停的地方给它传送一些数据并继续执行。</p>
 <p>还是以<code>range()</code>为例，你可以向生成器发送一个数据从而向前活着向后进行跳转：</p>
-<div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">jumping_range</span><span class="p">(</span><span class="n">up_to</span><span class="p">):</span>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">jumping_range</span><span class="p">(</span><span class="n">up_to</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;0～up_to（不包含）的生成器，向生成器发送一个数据进行跳转&quot;&quot;&quot;</span>
     <span class="n">index</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="k">while</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="n">up_to</span><span class="p">:</span>
         <span class="n">jump</span> <span class="o">=</span> <span class="k">yield</span> <span class="n">index</span>
-        <span class="k">if</span> <span class="n">jump</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">jump</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">jump</span> <span class="o">=</span> <span class="mi">1</span>
         <span class="n">index</span> <span class="o">+=</span> <span class="n">jump</span>
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
     <span class="n">iterator</span> <span class="o">=</span> <span class="n">jumping_range</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
-    <span class="k">print</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="n">iterator</span><span class="p">))</span>  <span class="c1"># 0</span>
-    <span class="k">print</span><span class="p">(</span><span class="n">iterator</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>  <span class="c1"># 2</span>
-    <span class="k">print</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="n">iterator</span><span class="p">))</span>  <span class="c1"># 3</span>
-    <span class="k">print</span><span class="p">(</span><span class="n">iterator</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>  <span class="c1"># 2</span>
+    <span class="nb">print</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="n">iterator</span><span class="p">))</span>  <span class="c1"># 0</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">iterator</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>  <span class="c1"># 2</span>
+    <span class="nb">print</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="n">iterator</span><span class="p">))</span>  <span class="c1"># 3</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">iterator</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>  <span class="c1"># 2</span>
     <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">iterator</span><span class="p">:</span>
-        <span class="k">print</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>  <span class="c1"># 3, 4</span>
-</pre></div>
+        <span class="nb">print</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>  <span class="c1"># 3, 4</span>
+</code></pre></div>
 
 
 <p>到了 <a href="https://docs.python.org/3/whatsnew/3.3.html">Python 3.3</a> ， <a href="https://www.python.org/dev/peps/pep-0380/">PEP 380</a> 添加了<code>yield from</code>语法，生成器的功能就更加丰富了。如果你的生成器要从一个迭代器产生每一个值，<code>yield from</code>这个特性能够让你更简洁明了地重构生成器。</p>
-<div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">lazy_range</span><span class="p">(</span><span class="n">up_to</span><span class="p">):</span>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">lazy_range</span><span class="p">(</span><span class="n">up_to</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;0～up_to(不包含)的生成器&quot;&quot;&quot;</span>
     <span class="n">index</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="k">def</span> <span class="nf">gratuitous_refactor</span><span class="p">():</span>
-        <span class="n">nonlocal</span> <span class="n">index</span>
+        <span class="k">nonlocal</span> <span class="n">index</span>
         <span class="k">while</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="n">up_to</span><span class="p">:</span>
             <span class="k">yield</span> <span class="n">index</span>
             <span class="n">index</span> <span class="o">+=</span> <span class="mi">1</span>
     <span class="k">yield from</span> <span class="n">gratuitous_refactor</span><span class="p">()</span>
-</pre></div>
+</code></pre></div>
 
 
 <p><code>yield from</code> 也能够让你将多个生成器连接起来。</p>
-<div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">bottom</span><span class="p">():</span>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">bottom</span><span class="p">():</span>
     <span class="k">return</span> <span class="p">(</span><span class="k">yield</span> <span class="mi">42</span><span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">middle</span><span class="p">():</span>
@@ -126,13 +127,13 @@
 <span class="c1"># 获取生成器</span>
 <span class="n">gen</span> <span class="o">=</span> <span class="n">top</span><span class="p">()</span>
 <span class="n">value</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">gen</span><span class="p">)</span>
-<span class="k">print</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>  <span class="c1"># Prints &#39;42&#39;.</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>  <span class="c1"># Prints &#39;42&#39;.</span>
 <span class="k">try</span><span class="p">:</span>
     <span class="n">value</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">value</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span>
 <span class="k">except</span> <span class="ne">StopIteration</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
     <span class="n">value</span> <span class="o">=</span> <span class="n">exc</span><span class="o">.</span><span class="n">value</span>
-<span class="k">print</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>  <span class="c1"># Prints &#39;84&#39;.</span>
-</pre></div>
+<span class="nb">print</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>  <span class="c1"># Prints &#39;84&#39;.</span>
+</code></pre></div>
 
 
 <h3>小结</h3>
@@ -161,13 +162,13 @@
 <h2><code>async/await</code> 是怎样工作的</h2>
 <h2>Python 3.4 怎样实现<code>async/await</code>相同的效果呢</h2>
 <p>由于Python 3.3 提供的生成器特性以及<code>asyncio</code>提供的事件循环， Python 3.4 有足够的能力来支持（以并发编程的形式 <a href="https://en.wikipedia.org/wiki/Concurrent_computing">concurrent programming</a>）异步编程。异步编程是说代码块的运行顺序我们事先是不知道的，因此称为异步而不是同步。 并发编程<em>Concurrent programming</em> 是编写代码，让它们之间可以独立运行而不依赖与其他部分，尽管这些代码是在同一个线程中运行的 (<a href="http://blog.golang.org/concurrency-is-not-parallelism">concurrency is <strong>not</strong> parallelism</a>)。例如，下边就是Python 3.4异步编程的例子：在两个异步并发的函数调用中实现一个减数器。</p>
-<div class="codehilite"><pre><span></span><span class="kn">import</span> <span class="nn">asyncio</span>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span> <span class="nn">asyncio</span>
 
 <span class="c1"># 代码来自于 http://curio.readthedocs.org/en/latest/tutorial.html.</span>
-<span class="nd">@asyncio.coroutine</span>
+<span class="nd">@asyncio</span><span class="o">.</span><span class="n">coroutine</span>
 <span class="k">def</span> <span class="nf">countdown</span><span class="p">(</span><span class="n">number</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
     <span class="k">while</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">print</span><span class="p">(</span><span class="s1">&#39;T-minus&#39;</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="s1">&#39;({})&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">number</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;T-minus&#39;</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="s1">&#39;(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">number</span><span class="p">))</span>
         <span class="k">yield from</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
         <span class="n">n</span> <span class="o">-=</span> <span class="mi">1</span>
 
@@ -177,7 +178,7 @@
     <span class="n">asyncio</span><span class="o">.</span><span class="n">ensure_future</span><span class="p">(</span><span class="n">countdown</span><span class="p">(</span><span class="s2">&quot;B&quot;</span><span class="p">,</span> <span class="mi">3</span><span class="p">))]</span>
 <span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span><span class="n">asyncio</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="n">tasks</span><span class="p">))</span>
 <span class="n">loop</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-</pre></div>
+</code></pre></div>
 
 
 <p>在 Python 3.4 中， 装饰器 <a href="https://docs.python.org/3/library/asyncio-task.html#asyncio.coroutine"><code>asyncio.coroutine</code></a> 就是用来把一个函数标记为协程 <a href="https://docs.python.org/3/reference/datamodel.html?#coroutine-objects">coroutine</a> ，这个协程将会在 <code>asyncio</code> 以及它提供的事件循环中使用。这也让 Python 有了一个明确具体的关于协程的定义：an object who implemented the methods added to generators in <a href="https://www.python.org/dev/peps/pep-0342/">PEP 342</a> and represented by the <a href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Coroutine"><code>collections.abc.Coroutine</code> abstract base class</a>. This meant that suddenly all generators implemented the coroutine interface even if they weren't meant to be used in that fashion. To fix this, <code>asyncio</code> required that all generators meant to be used as a coroutine had to be <a href="https://docs.python.org/3/library/asyncio-task.html#asyncio.coroutine">decorated with <code>asyncio.coroutine</code></a>.</p>
@@ -191,13 +192,13 @@
 <p>我将会向你展示一个完整的关于协程和事件循环的例子，但我还是想先阐述下 <code>async</code> 的 <code>await</code> 工作原理。</p>
 <h3>Python 3.4 怎样实现<code>async/await</code>相同的效果呢</h3>
 <p>由于Python 3.3 提供的生成器特性以及<code>asyncio</code>提供的事件循环， Python 3.4 有足够的能力来支持（以并发编程的形式 <a href="https://en.wikipedia.org/wiki/Concurrent_computing">concurrent programming</a>）异步编程。异步编程是说代码块的运行顺序我们事先是不知道的，因此称为异步而不是同步。 并发编程<em>Concurrent programming</em> 是编写代码，让它们之间可以独立运行而不依赖与其他部分，尽管这些代码是在同一个线程中运行的 (<a href="http://blog.golang.org/concurrency-is-not-parallelism">concurrency is <strong>not</strong> parallelism</a>)。例如，下边就是Python 3.4异步编程的例子：在两个异步并发的函数调用中实现一个减数器。</p>
-<div class="codehilite"><pre><span></span><span class="kn">import</span> <span class="nn">asyncio</span>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span> <span class="nn">asyncio</span>
 
 <span class="c1"># 代码来自于 http://curio.readthedocs.org/en/latest/tutorial.html.</span>
-<span class="nd">@asyncio.coroutine</span>
+<span class="nd">@asyncio</span><span class="o">.</span><span class="n">coroutine</span>
 <span class="k">def</span> <span class="nf">countdown</span><span class="p">(</span><span class="n">number</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
     <span class="k">while</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">print</span><span class="p">(</span><span class="s1">&#39;T-minus&#39;</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="s1">&#39;({})&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">number</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;T-minus&#39;</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="s1">&#39;(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">number</span><span class="p">))</span>
         <span class="k">yield from</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
         <span class="n">n</span> <span class="o">-=</span> <span class="mi">1</span>
 
@@ -207,7 +208,7 @@
     <span class="n">asyncio</span><span class="o">.</span><span class="n">ensure_future</span><span class="p">(</span><span class="n">countdown</span><span class="p">(</span><span class="s2">&quot;B&quot;</span><span class="p">,</span> <span class="mi">3</span><span class="p">))]</span>
 <span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span><span class="n">asyncio</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="n">tasks</span><span class="p">))</span>
 <span class="n">loop</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-</pre></div>
+</code></pre></div>
 
 
 <p>在 Python 3.4 中， 装饰器 <a href="https://docs.python.org/3/library/asyncio-task.html#asyncio.coroutine"><code>asyncio.coroutine</code></a> 就是用来把一个函数标记为协程 <a href="https://docs.python.org/3/reference/datamodel.html?#coroutine-objects">coroutine</a> ，这个协程将会在 <code>asyncio</code> 以及它提供的事件循环中使用。这也让 Python 有了一个明确具体的关于协程的定义：an object who implemented the methods added to generators in <a href="https://www.python.org/dev/peps/pep-0342/">PEP 342</a> and represented by the <a href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Coroutine"><code>collections.abc.Coroutine</code> abstract base class</a>. This meant that suddenly all generators implemented the coroutine interface even if they weren't meant to be used in that fashion. To fix this, <code>asyncio</code> required that all generators meant to be used as a coroutine had to be <a href="https://docs.python.org/3/library/asyncio-task.html#asyncio.coroutine">decorated with <code>asyncio.coroutine</code></a>.</p>
@@ -221,17 +222,17 @@
 <p>我将会向你展示一个完整的关于协程和事件循环的例子，但我还是想先阐述下 <code>async</code> 的 <code>await</code> 工作原理</p>
 <h3>Python 3.5 把<code>yield from</code> 替换成 <code>await</code></h3>
 <p>在Python 3.4中，如果我们想要异步编程，我们可以给一个函数加上一个装饰器<code>asyncio.coroutine</code>让它成为一个协程：</p>
-<div class="codehilite"><pre><span></span><span class="c1"># 这在 Python 3.5 也生效</span>
-<span class="nd">@asyncio.coroutine</span>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 这在 Python 3.5 也生效</span>
+<span class="nd">@asyncio</span><span class="o">.</span><span class="n">coroutine</span>
 <span class="k">def</span> <span class="nf">py34_coro</span><span class="p">():</span>
     <span class="k">yield from</span> <span class="n">stuff</span><span class="p">()</span>
-</pre></div>
+</code></pre></div>
 
 
 <p>在Python 3.5中，装饰器 <a href="https://docs.python.org/3/library/types.html#types.coroutine">types.coroutine</a>也可以把一个函数标识为协程，就跟<code>asyncio.coroutine</code> 一样。此外，我们还可以使用<code>async def</code>来标识函数为协程，不过这个函数不能包含任何<code>yield</code>或者<code>yield from</code>表达式，只可以用<code>return</code>或者<code>await</code>来返回值。</p>
-<div class="codehilite"><pre><span></span><span class="n">async</span> <span class="k">def</span> <span class="nf">py35_coro</span><span class="p">():</span>
-    <span class="n">await</span> <span class="n">stuff</span><span class="p">()</span>
-</pre></div>
+<div class="codehilite"><pre><span></span><code><span class="k">async</span> <span class="k">def</span> <span class="nf">py35_coro</span><span class="p">():</span>
+    <span class="k">await</span> <span class="n">stuff</span><span class="p">()</span>
+</code></pre></div>
 
 
 <p>关于<code>async</code> 和 <code>types.coroutine</code>最重要的一件事是，它更加准确和具体地定义了协程（ tighten the definition）。  It takes coroutines from simply being an interface to an actual type, making the distinction between any generator and a generator that is meant to be a coroutine much more stringent (and the <a href="https://docs.python.org/3/library/inspect.html#inspect.iscoroutine"><code>inspect.iscoroutine()</code> function</a> is even stricter by saying <code>async</code> has to be used).</p>
@@ -239,29 +240,29 @@
 <p>While <code>await</code> operates much like <code>yield from</code>, the objects that are acceptable to an <code>await</code> expression are different. Coroutines are definitely allowed in an <code>await</code> expression since the concept of coroutines are fundamental in all of this. But when you call <code>await</code> on an object , it technically needs to be an <a href="https://docs.python.org/3/reference/datamodel.html?#awaitable-objects"><em>awaitable</em> object</a>: an object that defines an <code>__await__()</code> method which returns an iterator which is <strong>not</strong> a coroutine itself . Coroutines themselves are also considered awaitable objects (hence why <code>collections.abc.Coroutine</code> inherits from <code>collections.abc.Awaitable</code>). This definition follows a Python tradition of making most syntax constructs translate into a method call underneath the hood, much like <code>a + b</code> is <code>a.__add__(b)</code> or <code>b.__radd__(a)</code> underneath it all.</p>
 <p><code>yield from</code> 和 <code>await</code> 之间的区别，让我们从更底层的角度来分析吧。从字节编码的角度重新审查上面两个协程例子，探索其本质区别。</p>
 <p><code>py34_coro()</code>的字节编码是:</p>
-<div class="codehilite"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="n">dis</span><span class="p">.</span><span class="n">dis</span><span class="p">(</span><span class="n">py34_coro</span><span class="p">)</span>
-  <span class="mi">2</span>           <span class="mi">0</span> <span class="n">LOAD_GLOBAL</span>              <span class="mi">0</span> <span class="p">(</span><span class="n">stuff</span><span class="p">)</span>
-              <span class="mi">3</span> <span class="n">CALL_FUNCTION</span>            <span class="mi">0</span> <span class="p">(</span><span class="mi">0</span> <span class="n">positional</span><span class="p">,</span> <span class="mi">0</span> <span class="n">keyword</span> <span class="n">pair</span><span class="p">)</span>
-              <span class="mi">6</span> <span class="n">GET_YIELD_FROM_ITER</span>
-              <span class="mi">7</span> <span class="n">LOAD_CONST</span>               <span class="mi">0</span> <span class="p">(</span><span class="k">None</span><span class="p">)</span>
-             <span class="mi">10</span> <span class="n">YIELD_FROM</span>
-             <span class="mi">11</span> <span class="n">POP_TOP</span>
-             <span class="mi">12</span> <span class="n">LOAD_CONST</span>               <span class="mi">0</span> <span class="p">(</span><span class="k">None</span><span class="p">)</span>
-             <span class="mi">15</span> <span class="n">RETURN_VALUE</span>
-</pre></div>
+<div class="codehilite"><pre><span></span><code><span class="err">&gt;&gt;&gt; dis.dis(py34_coro)</span>
+<span class="err">  2           0 LOAD_GLOBAL              0 (stuff)</span>
+<span class="err">              3 CALL_FUNCTION            0 (0 positional, 0 keyword pair)</span>
+<span class="err">              6 GET_YIELD_FROM_ITER</span>
+<span class="err">              7 LOAD_CONST               0 (None)</span>
+<span class="err">             10 YIELD_FROM</span>
+<span class="err">             11 POP_TOP</span>
+<span class="err">             12 LOAD_CONST               0 (None)</span>
+<span class="err">             15 RETURN_VALUE</span>
+</code></pre></div>
 
 
 <p><code>py35_coro()</code> 的字节编码为 :</p>
-<div class="codehilite"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="n">dis</span><span class="p">.</span><span class="n">dis</span><span class="p">(</span><span class="n">py35_coro</span><span class="p">)</span>
-  <span class="mi">1</span>           <span class="mi">0</span> <span class="n">LOAD_GLOBAL</span>              <span class="mi">0</span> <span class="p">(</span><span class="n">stuff</span><span class="p">)</span>
-              <span class="mi">3</span> <span class="n">CALL_FUNCTION</span>            <span class="mi">0</span> <span class="p">(</span><span class="mi">0</span> <span class="n">positional</span><span class="p">,</span> <span class="mi">0</span> <span class="n">keyword</span> <span class="n">pair</span><span class="p">)</span>
-              <span class="mi">6</span> <span class="n">GET_AWAITABLE</span>
-              <span class="mi">7</span> <span class="n">LOAD_CONST</span>               <span class="mi">0</span> <span class="p">(</span><span class="k">None</span><span class="p">)</span>
-             <span class="mi">10</span> <span class="n">YIELD_FROM</span>
-             <span class="mi">11</span> <span class="n">POP_TOP</span>
-             <span class="mi">12</span> <span class="n">LOAD_CONST</span>               <span class="mi">0</span> <span class="p">(</span><span class="k">None</span><span class="p">)</span>
-             <span class="mi">15</span> <span class="n">RETURN_VALUE</span>
-</pre></div>
+<div class="codehilite"><pre><span></span><code><span class="err">&gt;&gt;&gt; dis.dis(py35_coro)</span>
+<span class="err">  1           0 LOAD_GLOBAL              0 (stuff)</span>
+<span class="err">              3 CALL_FUNCTION            0 (0 positional, 0 keyword pair)</span>
+<span class="err">              6 GET_AWAITABLE</span>
+<span class="err">              7 LOAD_CONST               0 (None)</span>
+<span class="err">             10 YIELD_FROM</span>
+<span class="err">             11 POP_TOP</span>
+<span class="err">             12 LOAD_CONST               0 (None)</span>
+<span class="err">             15 RETURN_VALUE</span>
+</code></pre></div>
 
 
 <p>忽略由于 <code>py34_coro()</code> 的<code>asyncio.coroutine</code> 装饰器引起的行号不同，唯一的不同是：</p>
@@ -293,7 +294,7 @@
 more concrete, here is a complete (if contrived) asynchronous programming example, end-to-end from event loop and associated functions to user code. The example has coroutines which represents individual
 rocket launch countdowns but that appear to be counting down simultaneously . This is asynchronous programming through concurrency; three separate coroutines will be running independently, and yet it will
  all be done in a single thread.</p>
-<div class="codehilite"><pre><span></span><span class="kn">import</span> <span class="nn">datetime</span>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span> <span class="nn">datetime</span>
 <span class="kn">import</span> <span class="nn">heapq</span>
 <span class="kn">import</span> <span class="nn">types</span>
 <span class="kn">import</span> <span class="nn">time</span>
@@ -336,7 +337,7 @@ rocket launch countdowns but that appear to be counting down simultaneously . Th
     <span class="k">def</span> <span class="nf">run_until_complete</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># Start all the coroutines.</span>
         <span class="k">for</span> <span class="n">coro</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_new</span><span class="p">:</span>
-            <span class="n">wait_for</span> <span class="o">=</span> <span class="n">coro</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="bp">None</span><span class="p">)</span>
+            <span class="n">wait_for</span> <span class="o">=</span> <span class="n">coro</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
             <span class="n">heapq</span><span class="o">.</span><span class="n">heappush</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_waiting</span><span class="p">,</span> <span class="n">Task</span><span class="p">(</span><span class="n">wait_for</span><span class="p">,</span> <span class="n">coro</span><span class="p">))</span>
         <span class="c1"># Keep running until there is no more work to do.</span>
         <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">_waiting</span><span class="p">:</span>
@@ -357,7 +358,7 @@ rocket launch countdowns but that appear to be counting down simultaneously . Th
                 <span class="k">pass</span>
 
 
-<span class="nd">@types.coroutine</span>
+<span class="nd">@types</span><span class="o">.</span><span class="n">coroutine</span>
 <span class="k">def</span> <span class="nf">sleep</span><span class="p">(</span><span class="n">seconds</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Pause a coroutine for the specified number of seconds.</span>
 
@@ -372,19 +373,19 @@ rocket launch countdowns but that appear to be counting down simultaneously . Th
     <span class="k">return</span> <span class="n">actual</span> <span class="o">-</span> <span class="n">now</span>
 
 
-<span class="n">async</span> <span class="k">def</span> <span class="nf">countdown</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">length</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">delay</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="k">async</span> <span class="k">def</span> <span class="nf">countdown</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">length</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">delay</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Countdown a launch for `length` seconds, waiting `delay` seconds.</span>
 
 <span class="sd">    This is what a user would typically write.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">print</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="s1">&#39;waiting&#39;</span><span class="p">,</span> <span class="n">delay</span><span class="p">,</span> <span class="s1">&#39;seconds before starting countdown&#39;</span><span class="p">)</span>
-    <span class="n">delta</span> <span class="o">=</span> <span class="n">await</span> <span class="n">sleep</span><span class="p">(</span><span class="n">delay</span><span class="p">)</span>
-    <span class="k">print</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="s1">&#39;starting after waiting&#39;</span><span class="p">,</span> <span class="n">delta</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="s1">&#39;waiting&#39;</span><span class="p">,</span> <span class="n">delay</span><span class="p">,</span> <span class="s1">&#39;seconds before starting countdown&#39;</span><span class="p">)</span>
+    <span class="n">delta</span> <span class="o">=</span> <span class="k">await</span> <span class="n">sleep</span><span class="p">(</span><span class="n">delay</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="s1">&#39;starting after waiting&#39;</span><span class="p">,</span> <span class="n">delta</span><span class="p">)</span>
     <span class="k">while</span> <span class="n">length</span><span class="p">:</span>
-        <span class="k">print</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="s1">&#39;T-minus&#39;</span><span class="p">,</span> <span class="n">length</span><span class="p">)</span>
-        <span class="n">waited</span> <span class="o">=</span> <span class="n">await</span> <span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="s1">&#39;T-minus&#39;</span><span class="p">,</span> <span class="n">length</span><span class="p">)</span>
+        <span class="n">waited</span> <span class="o">=</span> <span class="k">await</span> <span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
         <span class="n">length</span> <span class="o">-=</span> <span class="mi">1</span>
-    <span class="k">print</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="s1">&#39;lift-off!&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="s1">&#39;lift-off!&#39;</span><span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
@@ -396,12 +397,12 @@ rocket launch countdowns but that appear to be counting down simultaneously . Th
                         <span class="n">countdown</span><span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">delay</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
     <span class="n">start</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
     <span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">()</span>
-    <span class="k">print</span><span class="p">(</span><span class="s1">&#39;Total elapsed time is&#39;</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Total elapsed time is&#39;</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span>
 
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
     <span class="n">main</span><span class="p">()</span>
-</pre></div>
+</code></pre></div>
 
 
 <p>As I said, it's contrived, but if you run this in Python 3.5 you will notice that all three coroutines run independently in a single thread and yet the total amount of time taken to run is about 5 seconds. You
@@ -415,9 +416,8 @@ can consider <code>Task</code>, <code>SleepingLoop</code>, and <code>sleep()</co
 all benefit from asynchronous programming in Python.</p>
 
     
-        <p class=tags>This entry was tagged
-        
-            <a href="/tags/async/await/">async/await</a>
+        <p class=tags>标签：
+        <a href="/tags/async/await/">async/await</a>
     
 
     
@@ -425,9 +425,8 @@ all benefit from asynchronous programming in Python.</p>
 
 
 
-
+</div>
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
-</div>
 </body>
 </html>
