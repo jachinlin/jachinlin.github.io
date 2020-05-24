@@ -186,3 +186,12 @@ ul.tagcloud li {
     padding: 0 10px;
     display: inline;
 }
+
+.utterances {
+    margin-top: 80px;
+    border-top: 1px solid #dee2e6;
+}
+
+.utterances-frame {
+    margin-top: 20px;
+}
